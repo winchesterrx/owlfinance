@@ -204,6 +204,27 @@ export default function SettingsPage() {
              <ChevronRight className="w-5 h-5 text-slate-300 mt-1 group-hover:text-blue-500 transition-colors" />
           </div>
 
+          <div className="md:col-span-2 p-5 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl text-white shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+             <div className="z-10 flex-1">
+                <h3 className="font-bold text-lg mb-2 flex items-center gap-2">📱 Instale no seu Celular (App Nativo)</h3>
+                <p className="text-sm text-blue-100 opacity-90 leading-relaxed mb-4">
+                   O OwlFinance foi projetado como um PWA (Progressive Web App). Isso significa que você pode instalá-lo como um aplicativo real de celular diretado da sua tela inicial:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-medium">
+                   <div className="bg-white/10 p-3 rounded-xl border border-white/20 backdrop-blur-sm">
+                      <strong className="block text-white mb-1">Para iPhone (Safari)</strong>
+                      1. Toque no ícone de "Compartilhar" (quadrado com seta pra cima).<br/>
+                      2. Role para baixo e toque em "Adicionar à Tela de Início".
+                   </div>
+                   <div className="bg-white/10 p-3 rounded-xl border border-white/20 backdrop-blur-sm">
+                      <strong className="block text-white mb-1">Para Android (Chrome)</strong>
+                      1. Toque nos "3 pontinhos" no canto superior direito.<br/>
+                      2. Toque em "Adicionar à Tela Inicial" ou "Instalar Aplicativo".
+                   </div>
+                </div>
+             </div>
+          </div>
+
           <div className="p-5 bg-white border border-slate-200 rounded-2xl hover:shadow-sm cursor-pointer transition-shadow group flex items-start gap-4">
              <div className="p-3 bg-purple-50 rounded-xl text-purple-600"><Bell className="w-6 h-6" /></div>
              <div className="flex-1">

@@ -3,8 +3,9 @@ import { cookies } from 'next/headers';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'owlfinance-super-secret-key-123!';
 
-export async function signToken(userId: number) {
-    return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
+export async function signToken(userId: number, remember: boolean = false) {
+    const expiresIn = remember ? '365d' : '1d';
+    return jwt.sign({ userId }, JWT_SECRET, { expiresIn });
 }
 
 export async function verifyToken(token: string): Promise<any> {

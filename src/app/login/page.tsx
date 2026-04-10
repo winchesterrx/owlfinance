@@ -6,6 +6,7 @@ import Link from 'next/link'
 export default function LoginPage() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [remember, setRemember] = useState(false)
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
@@ -16,7 +17,7 @@ export default function LoginPage() {
 
         const res = await fetch('/api/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email, password, remember })
         })
 
         const data = await res.json()
@@ -51,8 +52,13 @@ export default function LoginPage() {
                             <label className="text-xs font-bold text-slate-500 uppercase">Senha</label>
                             <input required type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full mt-1 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/50" />
                         </div>
+                        
+                        <div className="flex items-center gap-2 mt-2">
+                             <input type="checkbox" id="remember" checked={remember} onChange={e => setRemember(e.target.checked)} className="w-4 h-4 accent-blue-600 rounded cursor-pointer" />
+                             <label htmlFor="remember" className="text-sm text-slate-600 cursor-pointer select-none">Manter conectado neste dispositivo</label>
+                        </div>
 
-                        <button disabled={loading} type="submit" className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors flex justify-center items-center gap-2 mt-4">
+                        <button disabled={loading} type="submit" className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors flex justify-center items-center gap-2 mt-4 shadow-sm">
                             {loading ? 'Entrando...' : <><LogIn className="w-5 h-5"/> Entrar</>}
                         </button>
                     </form>

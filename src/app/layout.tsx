@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 export const metadata: Metadata = {
   title: 'OwlFinance | Seu painel inteligente',
   description: 'Gerenciador financeiro focado em alta performance e design premium',
+  manifest: '/manifest.json'
 }
 
 import { cookies } from 'next/headers'

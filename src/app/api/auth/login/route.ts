@@ -7,7 +7,7 @@ import { cookies } from 'next/headers';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { email, password } = body;
+        const { email, password, remember } = body;
 
         if(!email || !password) return NextResponse.json({ error: 'Credenciais incompletas' }, { status: 400 });
 
@@ -19,15 +19,16 @@ export async function POST(request: Request) {
         
         if(!tokenMatch) return NextResponse.json({ error: 'Senha incorreta' }, { status: 401 });
 
-        // Gera token
-        const token = await signToken(user.id);
+        // Gera token e seta validade
+        const token = await signToken(user.id, remember);
+        const maxAge = remember ? 60 * 60 * 24 * 365 : 60 * 60 * 24; // 1 ano ou 1 dia
         
         // Seta cookie
         cookies().set('owl_session', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 60 * 60 * 24 * 7, // 7 dias
+            maxAge: maxAge,
             path: '/'
         });
 
