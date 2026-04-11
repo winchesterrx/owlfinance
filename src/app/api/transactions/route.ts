@@ -13,20 +13,36 @@ export async function GET(request: Request) {
 
     // Se filtrar por goal_id, retorna aportes dessa meta (todos os meses)
     if (goalId) {
+      // Auto-migration: adicionar coluna goal_id se não existir
+      try {
+        const [cols]: any = await pool.query(`SHOW COLUMNS FROM transactions LIKE 'goal_id'`);
+        if (cols.length === 0) {
+          await pool.query(`ALTER TABLE transactions ADD COLUMN goal_id INT DEFAULT NULL`);
+        }
+      } catch(e) {}
+
+      // Buscar o título da meta para fallback
+      let goalTitle = '';
+      try {
+        const [goalRows]: any = await pool.query(`SELECT title FROM goals WHERE id = ? AND user_id = ?`, [goalId, userId]);
+        if (goalRows.length > 0) goalTitle = goalRows[0].title;
+      } catch(e) {}
+
+      // Tentar buscar por goal_id primeiro
       const [rows]: any = await pool.query(
         `SELECT * FROM transactions 
-         WHERE user_id = ? AND category = 'Metas' AND title LIKE CONCAT('Aporte: ', '%')
-         AND goal_id = ?
+         WHERE user_id = ? AND goal_id = ?
          ORDER BY transaction_date DESC`,
         [userId, goalId]
       );
-      // Fallback: se goal_id não existir na coluna, buscar pelo título
-      if (rows.length === 0) {
+      
+      // Fallback: buscar pelo título da meta se não encontrou por goal_id
+      if (rows.length === 0 && goalTitle) {
         const [fallbackRows]: any = await pool.query(
           `SELECT * FROM transactions 
-           WHERE user_id = ? AND category = 'Metas'
+           WHERE user_id = ? AND category = 'Metas' AND title LIKE ?
            ORDER BY transaction_date DESC`,
-          [userId]
+          [userId, `%${goalTitle}%`]
         );
         return NextResponse.json(fallbackRows);
       }

@@ -4,6 +4,11 @@ import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Wallet, Plus, Cred
 import { Card, CardContent } from '@/components/ui/card'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar, Legend } from 'recharts'
 
+// Formatação Brasileira de Moeda (1000 => 1.000,00)
+const formatBRL = (value: number) => {
+  return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export default function DashboardPage() {
   const [data, setData] = useState<any>(null)
   const [date, setDate] = useState(new Date())
@@ -214,19 +219,19 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 order-3 md:order-1">
           <Card className="p-2 md:p-5 rounded-xl md:rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
              <div className="flex items-center gap-1 text-slate-500 mb-0.5 md:mb-2 text-[9px] md:text-sm font-medium"><TrendingUp className="w-2.5 h-2.5 md:w-4 md:h-4 text-green-500"/> <span className="truncate uppercase md:normal-case">Entradas</span></div>
-             <div className="text-sm md:text-2xl font-bold text-green-600">R$ {data.currentMonthIncome.toFixed(2)}</div>
+             <div className="text-sm md:text-2xl font-bold text-green-600">R$ {formatBRL(data.currentMonthIncome)}</div>
           </Card>
           <Card className="p-2 md:p-5 rounded-xl md:rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
              <div className="flex items-center gap-1 text-slate-500 mb-0.5 md:mb-2 text-[9px] md:text-sm font-medium"><TrendingDown className="w-2.5 h-2.5 md:w-4 md:h-4 text-red-500"/> <span className="truncate uppercase md:normal-case">Saídas</span></div>
-             <div className="text-sm md:text-2xl font-bold text-red-600">R$ {data.totalMonthExpenses.toFixed(2)}</div>
+             <div className="text-sm md:text-2xl font-bold text-red-600">R$ {formatBRL(data.totalMonthExpenses)}</div>
           </Card>
           <Card className="p-2 md:p-5 rounded-xl md:rounded-2xl border border-slate-200 shadow-sm">
              <div className="flex items-center gap-1 text-slate-500 mb-0.5 md:mb-2 text-[9px] md:text-sm font-medium"><Wallet className="w-2.5 h-2.5 md:w-4 md:h-4 text-blue-500"/> <span className="truncate uppercase md:normal-case">Saldo</span></div>
-             <div className="text-sm md:text-2xl font-bold text-blue-600 mb-0.5 md:mb-1">R$ {data.netBalance.toFixed(2)}</div>
+             <div className="text-sm md:text-2xl font-bold text-blue-600 mb-0.5 md:mb-1">R$ {formatBRL(data.netBalance)}</div>
           </Card>
           <Card className="p-2 md:p-5 rounded-xl md:rounded-2xl border border-slate-200 shadow-sm">
              <div className="flex items-center gap-1 text-slate-500 mb-0.5 md:mb-2 text-[9px] md:text-sm font-medium"><Wallet className="w-2.5 h-2.5 md:w-4 md:h-4 text-emerald-500"/> <span className="truncate uppercase md:normal-case">Principal</span></div>
-             <div className="text-sm md:text-2xl font-bold text-emerald-600">R$ {Number(data.walletBalances.find((w:any) => w.wallet_source === 'Conta Principal')?.netBalance || 0).toFixed(2)}</div>
+             <div className="text-sm md:text-2xl font-bold text-emerald-600">R$ {formatBRL(Number(data.walletBalances.find((w:any) => w.wallet_source === 'Conta Principal')?.netBalance || 0))}</div>
           </Card>
         </div>
 
@@ -238,7 +243,7 @@ export default function DashboardPage() {
                 {data.walletBalances.map((wallet: any, idx: number) => (
                     <div key={idx} className="min-w-[150px] p-4 bg-slate-50 rounded-xl border border-slate-200">
                         <p className="text-xs text-slate-500 font-semibold uppercase mb-1 truncate">{wallet.wallet_source}</p>
-                        <p className="text-lg font-bold text-slate-800">R$ {Number(wallet.netBalance).toFixed(2)}</p>
+                        <p className="text-lg font-bold text-slate-800">R$ {formatBRL(Number(wallet.netBalance))}</p>
                     </div>
                 ))}
             </div>
@@ -275,11 +280,11 @@ export default function DashboardPage() {
                                     <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                                 ))}
                              </Pie>
-                             <RechartsTooltip contentStyle={{ borderRadius: '12px', border: '#e2e8f0', fontSize: '12px' }} formatter={(value: any) => `R$ ${Number(value).toFixed(2)}`} />
+                             <RechartsTooltip contentStyle={{ borderRadius: '12px', border: '#e2e8f0', fontSize: '12px' }} formatter={(value: any) => `R$ ${formatBRL(Number(value))}`} />
                          </PieChart>
                       </ResponsiveContainer>
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                          <span className="text-xl font-black text-slate-800">R$ {data.currentMonthIncome.toFixed(0)}</span>
+                          <span className="text-xl font-black text-slate-800">R$ {formatBRL(data.currentMonthIncome)}</span>
                           <span className="text-[10px] uppercase font-bold text-slate-400">Renda Base</span>
                       </div>
                   </div>
@@ -434,7 +439,7 @@ export default function DashboardPage() {
                                                         />
                                                         <p className={`text-xs font-semibold ${paidItem ? 'text-green-700 line-through opacity-60' : 'text-slate-700'}`}>{s.setting_name}</p>
                                                     </div>
-                                                    <span className={`text-xs font-bold ${paidItem ? 'text-green-600/50' : 'text-red-600'}`}>R$ {Number(s.setting_value).toFixed(2)}</span>
+                                                    <span className={`text-xs font-bold ${paidItem ? 'text-green-600/50' : 'text-red-600'}`}>R$ {formatBRL(Number(s.setting_value))}</span>
                                                 </div>
                                             )
                                         })}
@@ -492,7 +497,7 @@ export default function DashboardPage() {
                                     <p className="text-[10px] text-slate-500 uppercase">{s.setting_key}</p>
                                 </div>
                             </div>
-                            <span className={`font-bold text-sm ${paidItem ? 'text-green-600/50 line-through' : 'text-green-600'}`}>R$ {Number(s.setting_value).toFixed(2)}</span>
+                            <span className={`font-bold text-sm ${paidItem ? 'text-green-600/50 line-through' : 'text-green-600'}`}>R$ {formatBRL(Number(s.setting_value))}</span>
                         </div>
                     )})}
                 </div>
@@ -519,7 +524,7 @@ export default function DashboardPage() {
                           <div className="flex items-center gap-2"><Target className="w-5 h-5 text-blue-500"/><h3 className="font-bold text-slate-800">{g.title}</h3></div>
                           <span className="text-sm font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">{p.toFixed(1)}%</span>
                       </div>
-                      <div className="flex justify-between text-xs text-slate-500 mb-2 font-medium"><span>Acumulado: R$ {Number(g.current_amount).toFixed(2)}</span><span>Alvo: R$ {Number(g.target_amount).toFixed(2)}</span></div>
+                      <div className="flex justify-between text-xs text-slate-500 mb-2 font-medium"><span>Acumulado: R$ {formatBRL(Number(g.current_amount))}</span><span>Alvo: R$ {formatBRL(Number(g.target_amount))}</span></div>
                       <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden mb-4"><div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${p}%` }}></div></div>
                       
                       <div className="flex gap-2 items-center border border-slate-100 rounded-lg p-2 bg-slate-50 transition-colors focus-within:border-blue-300 mb-3">
@@ -543,7 +548,7 @@ export default function DashboardPage() {
                                           <p className="text-slate-400">{new Date(h.transaction_date).toLocaleDateString()}</p>
                                       </div>
                                       <div className="flex items-center gap-2">
-                                          <span className="font-bold text-blue-600">R$ {Number(h.amount).toFixed(2)}</span>
+                                          <span className="font-bold text-blue-600">R$ {formatBRL(Number(h.amount))}</span>
                                           <button onClick={() => { handleDelete(h.id); setTimeout(() => { fetchGoalHistory(g.id); fetchDashboard(date); }, 500); }} className="p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors">
                                               <Trash2 className="w-3.5 h-3.5" />
                                           </button>
@@ -599,7 +604,7 @@ export default function DashboardPage() {
                             <td className="p-3 md:p-4 text-right">
                                 <div className="flex flex-col items-end gap-0.5">
                                     <span className={`font-bold text-sm md:text-base ${t.type === 'income' ? 'text-green-600' : 'text-slate-800'}`}>
-                                        {t.type === 'income' ? '+' : '-'} R$ {Number(t.amount).toFixed(2)}
+                                        {t.type === 'income' ? '+' : '-'} R$ {formatBRL(Number(t.amount))}
                                     </span>
                                     <span className={`text-[8px] md:text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-md font-bold ${t.status === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
                                         {t.status === 'paid' ? 'Efetivado' : 'Aguardando'}
