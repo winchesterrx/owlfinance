@@ -141,40 +141,40 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
-      {/* Header & Date Selector */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+      {/* Header & Date Selector - Ultra Compacto no Mobile */}
+      <div className="flex flex-row items-center justify-between gap-2 bg-white p-2 md:p-4 rounded-2xl shadow-sm border border-slate-200">
         <div className="flex items-center gap-2">
-           <Wallet className="w-6 h-6 text-blue-600" />
-           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard de Contas</h1>
+           <Wallet className="w-5 h-5 md:w-6 md:h-6 text-blue-600 shrink-0" />
+           <h1 className="hidden md:block text-2xl font-bold tracking-tight text-slate-900">Dashboard de Contas</h1>
+           <span className="md:hidden font-bold text-slate-900 text-sm">Dashboard</span>
         </div>
-        <div className="flex items-center gap-4">
-           <button onClick={prevMonth} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"><ChevronLeft className="w-5 h-5 text-slate-600"/></button>
-           <span className="font-semibold text-slate-800 min-w-[120px] text-center">{monthName}</span>
-           <button onClick={nextMonth} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"><ChevronRight className="w-5 h-5 text-slate-600"/></button>
+        <div className="flex items-center gap-2 md:gap-4 scale-90 md:scale-100 origin-right">
+           <button onClick={prevMonth} className="p-1.5 md:p-2 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"><ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-slate-600"/></button>
+           <span className="font-semibold text-slate-800 min-w-[100px] md:min-w-[120px] text-center text-sm md:text-base">{monthName}</span>
+           <button onClick={nextMonth} className="p-1.5 md:p-2 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"><ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-slate-600"/></button>
         </div>
       </div>
 
-      {/* 4 Cards Principais - Compactos no Mobile (2x2) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        <Card className="p-3 md:p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-           <div className="flex items-center gap-1.5 text-slate-500 mb-1 md:mb-2 text-[10px] md:text-sm font-medium"><TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-green-500"/> <span className="truncate">Entradas Mês</span></div>
-           <div className="text-lg md:text-2xl font-bold text-green-600">R$ {data.currentMonthIncome.toFixed(2)}</div>
-        </Card>
-        <Card className="p-3 md:p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-           <div className="flex items-center gap-1.5 text-slate-500 mb-1 md:mb-2 text-[10px] md:text-sm font-medium"><TrendingDown className="w-3 h-3 md:w-4 md:h-4 text-red-500"/> <span className="truncate">Saídas Mês</span></div>
-           <div className="text-lg md:text-2xl font-bold text-red-600">R$ {data.totalMonthExpenses.toFixed(2)}</div>
-        </Card>
-        <Card className="p-3 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
-           <div className="flex items-center gap-1.5 text-slate-500 mb-1 md:mb-2 text-[10px] md:text-sm font-medium"><Wallet className="w-3 h-3 md:w-4 md:h-4 text-blue-500"/> <span className="truncate">Saldo Geral</span></div>
-           <div className="text-lg md:text-2xl font-bold text-blue-600 mb-1">R$ {data.netBalance.toFixed(2)}</div>
-        </Card>
-        <Card className="p-3 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
-           <div className="flex items-center gap-1.5 text-slate-500 mb-1 md:mb-2 text-[10px] md:text-sm font-medium"><Wallet className="w-3 h-3 md:w-4 md:h-4 text-emerald-500"/> <span className="truncate">Conta Principal</span></div>
-           <div className="text-lg md:text-2xl font-bold text-emerald-600">R$ {Number(data.walletBalances.find((w:any) => w.wallet_source === 'Conta Principal')?.netBalance || 0).toFixed(2)}</div>
-        </Card>
-      </div>
-
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 md:gap-6">
+        {/* 4 Cards Principais - Mini no Mobile (2x2) - Ordem 3 no mobile, Ordem 1 no Desktop */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 order-3 md:order-1">
+          <Card className="p-2 md:p-5 rounded-xl md:rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+             <div className="flex items-center gap-1 text-slate-500 mb-0.5 md:mb-2 text-[9px] md:text-sm font-medium"><TrendingUp className="w-2.5 h-2.5 md:w-4 md:h-4 text-green-500"/> <span className="truncate uppercase md:normal-case">Entradas</span></div>
+             <div className="text-sm md:text-2xl font-bold text-green-600">R$ {data.currentMonthIncome.toFixed(2)}</div>
+          </Card>
+          <Card className="p-2 md:p-5 rounded-xl md:rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+             <div className="flex items-center gap-1 text-slate-500 mb-0.5 md:mb-2 text-[9px] md:text-sm font-medium"><TrendingDown className="w-2.5 h-2.5 md:w-4 md:h-4 text-red-500"/> <span className="truncate uppercase md:normal-case">Saídas</span></div>
+             <div className="text-sm md:text-2xl font-bold text-red-600">R$ {data.totalMonthExpenses.toFixed(2)}</div>
+          </Card>
+          <Card className="p-2 md:p-5 rounded-xl md:rounded-2xl border border-slate-200 shadow-sm">
+             <div className="flex items-center gap-1 text-slate-500 mb-0.5 md:mb-2 text-[9px] md:text-sm font-medium"><Wallet className="w-2.5 h-2.5 md:w-4 md:h-4 text-blue-500"/> <span className="truncate uppercase md:normal-case">Saldo</span></div>
+             <div className="text-sm md:text-2xl font-bold text-blue-600 mb-0.5 md:mb-1">R$ {data.netBalance.toFixed(2)}</div>
+          </Card>
+          <Card className="p-2 md:p-5 rounded-xl md:rounded-2xl border border-slate-200 shadow-sm">
+             <div className="flex items-center gap-1 text-slate-500 mb-0.5 md:mb-2 text-[9px] md:text-sm font-medium"><Wallet className="w-2.5 h-2.5 md:w-4 md:h-4 text-emerald-500"/> <span className="truncate uppercase md:normal-case">Principal</span></div>
+             <div className="text-sm md:text-2xl font-bold text-emerald-600">R$ {Number(data.walletBalances.find((w:any) => w.wallet_source === 'Conta Principal')?.netBalance || 0).toFixed(2)}</div>
+          </Card>
+        </div>
 
         {/* MÓDULO WALLETS & INSIGHTS DA RENDA */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 order-3 md:order-1">
@@ -285,10 +285,8 @@ export default function DashboardPage() {
               )}
           </Card>
 
-      </div>
-
-      {/* --- PAINÉIS UNIFICADOS: ENTRADAS E SAÍDAS --- PRIORIDADE NO MOBILE (ORDER-2) */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 order-2 md:order-3 mt-4 md:mt-8">
+        {/* --- PAINÉIS UNIFICADOS: ENTRADAS E SAÍDAS --- PRIORIDADE NO MOBILE (ORDER-1 NO CONTAINER) */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 order-1 md:order-3 mt-0 md:mt-8">
          
          {/* --- PAINEL UNIFICADO DE SAÍDAS --- INVERTIDO NO MOBILE PRA VIR PRIMEIRO */}
          <Card className="flex flex-col rounded-2xl border border-slate-200 shadow-sm overflow-hidden bg-white order-1 md:order-2">
