@@ -141,41 +141,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4 max-w-6xl mx-auto pb-12">
-      {/* VERSÃO MOBILE: LANÇAMENTO RÁPIDO NO TOPO ABSOLUTO */}
-      <div className="md:hidden block px-2 pt-2 bg-yellow-400/20">
-          <Card className="p-4 rounded-2xl border-2 border-red-600 bg-white shadow-2xl animate-bounce-subtle">
-                <div className="flex justify-between items-center mb-3">
-                    <p className="text-[10px] font-black text-red-600 uppercase tracking-[0.2em]">Lançar Gasto Agora</p>
-                    <span className="text-[10px] bg-red-600 text-white px-3 py-1 rounded-full font-black animate-pulse">V 2.2 - ATUALIZADO</span>
-                </div>
-                <div className="space-y-3">
-                    <div className="flex gap-2">
-                        <input value={saidaForm.description} onChange={e => setSaidaForm({...saidaForm, description: e.target.value})} placeholder="O que comprou?" className="w-2/3 p-3 bg-white border border-red-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500" />
-                        <input value={saidaForm.amount} onChange={e => setSaidaForm({...saidaForm, amount: e.target.value})} type="number" placeholder="R$" className="w-1/3 p-3 bg-white border border-red-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500" />
-                    </div>
-                    <div className="flex gap-2">
-                        <select value={saidaForm.category} onChange={e => setSaidaForm({...saidaForm, category: e.target.value, subcategory: ''})} className="w-1/2 p-3 bg-white border border-red-200 rounded-xl text-xs outline-none">
-                            <option value="">Grupo...</option>
-                            {(data.customCategories || []).filter((c:any) => c.type === 'expense').map((c:any) => (
-                                <option key={c.id} value={c.name}>{c.name}</option>
-                            ))}
-                        </select>
-                        {(() => {
-                            const parent = (data.customCategories || []).find((c:any) => c.type === 'expense' && c.name === saidaForm.category);
-                            return (
-                                <select value={saidaForm.subcategory} onChange={e => setSaidaForm({...saidaForm, subcategory: e.target.value})} className="w-1/2 p-3 bg-white border border-red-200 rounded-xl text-xs outline-none" disabled={!parent || parent.subcategories.length === 0}>
-                                    <option value="">Subgrupo...</option>
-                                    {parent?.subcategories.map((sub:any) => <option key={sub.id} value={sub.name}>{sub.name}</option>)}
-                                </select>
-                            )
-                        })()}
-                    </div>
-                    <button onClick={() => handleAddTransaction('expense')} className="w-full py-4 bg-red-600 text-white font-black rounded-xl shadow-xl flex justify-center items-center gap-2 active:scale-95 transition-all text-base">
-                        <Plus className="w-6 h-6"/> REGISTRAR GASTO
-                    </button>
-                </div>
-          </Card>
-      </div>
 
       {/* Header & Date Selector - Ultra Compacto no Mobile */}
       <div className="flex flex-row items-center justify-between gap-2 bg-white p-2 md:p-4 rounded-2xl shadow-sm border border-slate-200">
