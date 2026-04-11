@@ -21,6 +21,13 @@ export default function RootLayout({
   const hasToken = cookies().has('owl_session')
   return (
     <html lang="pt-BR">
+      <head>
+        <meta name="theme-color" content="#3b82f6" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="OWL Finance" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+      </head>
       <body className={`${inter.variable} font-sans antialiased bg-slate-50 text-slate-900`}>
         <div className="flex min-h-screen">
           {hasToken && <Sidebar />}
@@ -28,6 +35,16 @@ export default function RootLayout({
             {children}
           </main>
         </div>
+        {/* Registro do Service Worker para PWA */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+              navigator.serviceWorker.register('/sw.js')
+                .then(function(reg) { console.log('[PWA] Service Worker registrado:', reg.scope); })
+                .catch(function(err) { console.warn('[PWA] Falha ao registrar SW:', err); });
+            });
+          }
+        `}} />
       </body>
     </html>
   )

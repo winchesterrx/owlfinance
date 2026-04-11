@@ -1,8 +1,9 @@
 "use client"
 import { useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Wallet, Plus, CreditCard, FileText, CheckCircle2, Trash2, Target, CircleDashed, Receipt, Pencil, X, History } from 'lucide-react'
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Wallet, Plus, CreditCard, FileText, CheckCircle2, Trash2, Target, CircleDashed, Receipt, Pencil, X, History, WifiOff, Wifi, RefreshCw, CloudOff, CloudUpload, Loader2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar, Legend } from 'recharts'
+import { useOfflineSync } from '@/lib/useOfflineSync'
 
 // Formatação Brasileira de Moeda (1000 => 1.000,00)
 const formatBRL = (value: number) => {
@@ -21,15 +22,49 @@ export default function DashboardPage() {
   const [goalHistory, setGoalHistory] = useState<any>({})
   const [expandedGoal, setExpandedGoal] = useState<number | null>(null)
 
+  // ─── Hook de Suporte Offline ───────────────────────────────────
+  const {
+    isOnline,
+    pendingCount,
+    isSyncing,
+    syncToast,
+    submitTransaction,
+    submitDelete,
+    forceSync,
+    saveDashboardCache,
+    loadDashboardCache,
+  } = useOfflineSync({
+    onSyncComplete: () => fetchDashboard(date),  // Recarrega o dashboard real após sincronizar
+  });
+
   const fetchDashboard = async (targetDate: Date) => {
     const month = targetDate.getMonth() + 1
     const year = targetDate.getFullYear()
+
+    // Primeiro: carregar cache do IndexedDB pra mostrar instantâneo
+    try {
+      const cached = await loadDashboardCache(month, year);
+      if (cached && !data) {
+        setData(cached);  // Mostra cache imediatamente (só se não tem dados)
+      }
+    } catch {}
+
+    // Segundo: tentar buscar dados frescos da API
     try {
       const res = await fetch(`/api/dashboard?month=${month}&year=${year}`, { cache: 'no-store' })
-      const json = await res.json()
-      setData(json)
+      if (res.ok) {
+        const json = await res.json()
+        setData(json)
+        // Salvar no cache para uso offline futuro
+        await saveDashboardCache(month, year, json);
+      }
     } catch (err) {
-      console.error(err)
+      console.warn('[Dashboard] Offline — usando cache local')
+      // Se falhou e não temos dados ainda, tentar cache
+      if (!data) {
+        const cached = await loadDashboardCache(month, year);
+        if (cached) setData(cached);
+      }
     }
   }
 
@@ -47,19 +82,23 @@ export default function DashboardPage() {
     const form = type === 'income' ? entradaForm : saidaForm;
     if (!form.amount) return;
 
-    await fetch('/api/transactions', {
-      method: 'POST',
-      body: JSON.stringify({
-        title: form.description || (type === 'income' ? 'Entrada' : 'Despesa'),
-        amount: parseFloat(form.amount),
-        type,
-        category: form.category,
-        subcategory: (form as any).subcategory || null,
-        status: 'paid',
-        transaction_date: date.toISOString().split('T')[0],
-        wallet_source: type === 'income' ? (form.description || 'Geral') : (saidaForm.sourceWallet || 'Conta Principal')
-      })
-    })
+    const payload = {
+      title: form.description || (type === 'income' ? 'Entrada' : 'Despesa'),
+      amount: parseFloat(form.amount),
+      type,
+      category: form.category,
+      subcategory: (form as any).subcategory || null,
+      status: 'paid',
+      transaction_date: date.toISOString().split('T')[0],
+      wallet_source: type === 'income' ? (form.description || 'Geral') : (saidaForm.sourceWallet || 'Conta Principal')
+    };
+
+    await submitTransaction(
+      '/api/transactions',
+      'POST',
+      payload,
+      `${type === 'income' ? '⬆ Entrada' : '⬇ Saída'}: ${payload.title} R$ ${formatBRL(payload.amount)}`
+    );
 
     if (type === 'income') setEntradaForm({ category: 'Salário Líquido', description: '', amount: '' })
     else setSaidaForm({ ...saidaForm, category: '', subcategory: '', description: '', amount: '' })
@@ -89,10 +128,12 @@ export default function DashboardPage() {
           netBalance: setting.setting_type === 'income' ? prev.netBalance + Number(setting.setting_value) : prev.netBalance - Number(setting.setting_value)
       }));
 
-      await fetch('/api/transactions', {
-        method: 'POST',
-        body: JSON.stringify(fakeTransaction)
-      })
+      await submitTransaction(
+        '/api/transactions',
+        'POST',
+        fakeTransaction,
+        `✅ Checklist: ${setting.setting_name} R$ ${formatBRL(Number(setting.setting_value))}`
+      );
       fetchDashboard(date)
   }
 
@@ -111,25 +152,31 @@ export default function DashboardPage() {
        }));
     }
 
-    await fetch(`/api/transactions?id=${id}`, { method: 'DELETE' })
+    await submitDelete(
+      `/api/transactions?id=${id}`,
+      `🗑 Excluir: ${t?.title || 'Transação'}`
+    );
     fetchDashboard(date)
   }
 
   const handleAporte = async (goalId: number, goalTitle: string) => {
       if(!aporteForm.amount) return;
-      await fetch('/api/transactions', {
-          method: 'POST',
-          body: JSON.stringify({
-              title: `Aporte: ${goalTitle}`,
-              amount: parseFloat(aporteForm.amount),
-              type: 'expense',
-              category: 'Metas',
-              status: 'paid',
-              transaction_date: date.toISOString().split('T')[0],
-              wallet_source: saidaForm.sourceWallet || 'Conta Principal',
-              goal_id: goalId
-          })
-      })
+      const payload = {
+          title: `Aporte: ${goalTitle}`,
+          amount: parseFloat(aporteForm.amount),
+          type: 'expense',
+          category: 'Metas',
+          status: 'paid',
+          transaction_date: date.toISOString().split('T')[0],
+          wallet_source: saidaForm.sourceWallet || 'Conta Principal',
+          goal_id: goalId
+      };
+      await submitTransaction(
+          '/api/transactions',
+          'POST',
+          payload,
+          `🎯 Aporte: ${goalTitle} R$ ${formatBRL(payload.amount)}`
+      );
       setAporteForm({ amount: '', goalId: null })
       fetchDashboard(date)
       // Reload history if expanded
@@ -138,18 +185,21 @@ export default function DashboardPage() {
 
   const handleEditTransaction = async () => {
       if (!editingTx) return;
-      await fetch('/api/transactions', {
-          method: 'PUT',
-          body: JSON.stringify({
-              id: editingTx.id,
-              title: editForm.title,
-              amount: parseFloat(editForm.amount),
-              category: editForm.category,
-              subcategory: editForm.subcategory || null,
-              wallet_source: editForm.wallet_source,
-              status: editingTx.status
-          })
-      })
+      const payload = {
+          id: editingTx.id,
+          title: editForm.title,
+          amount: parseFloat(editForm.amount),
+          category: editForm.category,
+          subcategory: editForm.subcategory || null,
+          wallet_source: editForm.wallet_source,
+          status: editingTx.status
+      };
+      await submitTransaction(
+          '/api/transactions',
+          'PUT',
+          payload,
+          `✏️ Editar: ${editForm.title} R$ ${formatBRL(parseFloat(editForm.amount))}`
+      );
       setEditingTx(null)
       fetchDashboard(date)
   }
@@ -199,12 +249,53 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4 max-w-6xl mx-auto pb-12">
 
+      {/* ═══ BARRA DE STATUS OFFLINE / SYNC ═══ */}
+      {!isOnline && (
+        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-2xl shadow-sm animate-pulse">
+          <WifiOff className="w-5 h-5 shrink-0" />
+          <div className="flex-1">
+            <p className="font-bold text-sm">Você está offline</p>
+            <p className="text-xs text-amber-600">Seus registros serão salvos localmente e sincronizados quando a internet voltar.</p>
+          </div>
+          <CloudOff className="w-5 h-5 text-amber-400 shrink-0" />
+        </div>
+      )}
+
+      {/* Toast de sincronização */}
+      {syncToast && (
+        <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl shadow-sm transition-all duration-500">
+          <CloudUpload className="w-5 h-5 shrink-0" />
+          <p className="font-semibold text-sm flex-1">{syncToast}</p>
+        </div>
+      )}
+
       {/* Header & Date Selector - Ultra Compacto no Mobile */}
       <div className="flex flex-row items-center justify-between gap-2 bg-white p-2 md:p-4 rounded-2xl shadow-sm border border-slate-200">
         <div className="flex items-center gap-2">
            <Wallet className="w-5 h-5 md:w-6 md:h-6 text-blue-600 shrink-0" />
            <h1 className="hidden md:block text-2xl font-bold tracking-tight text-slate-900">Dashboard de Contas</h1>
            <span className="md:hidden font-bold text-slate-900 text-sm">Dashboard</span>
+           {/* Badge de pendentes */}
+           {pendingCount > 0 && (
+             <button
+               onClick={forceSync}
+               className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-full text-[10px] md:text-xs font-bold transition-colors border border-amber-200"
+               title="Clique para sincronizar"
+             >
+               {isSyncing ? (
+                 <Loader2 className="w-3 h-3 animate-spin" />
+               ) : (
+                 <CloudUpload className="w-3 h-3" />
+               )}
+               {pendingCount} pendente{pendingCount > 1 ? 's' : ''}
+             </button>
+           )}
+           {/* Indicador sutil de online */}
+           {isOnline && pendingCount === 0 && (
+             <div className="hidden md:flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold border border-emerald-100">
+               <Wifi className="w-2.5 h-2.5" /> Online
+             </div>
+           )}
         </div>
         <div className="flex items-center gap-2 md:gap-4 scale-90 md:scale-100 origin-right">
            <button onClick={prevMonth} className="p-1.5 md:p-2 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"><ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-slate-600"/></button>
