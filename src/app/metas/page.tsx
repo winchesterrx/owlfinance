@@ -186,94 +186,96 @@ export default function MetasPage() {
 
             return (
             <Card key={g.id} className="rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden hover:border-blue-300 transition-all">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-blue-700 flex justify-between items-center text-lg">
-                        <span className="flex items-center"><Target className="w-5 h-5 mr-2 text-blue-500" /> {g.title}</span>
-                        <button onClick={() => handleDelete(g.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1"><Trash2 className="w-4 h-4"/></button>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex justify-between text-xs text-slate-500 font-semibold">
-                        <span>R$ {formatBRL(Number(g.current_amount))} salvos</span>
-                        <span>Alvo: R$ {formatBRL(Number(g.target_amount))}</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-3 relative overflow-hidden">
-                        <div className="bg-blue-500 h-3 rounded-full transition-all duration-1000" style={{ width: `${percentage}%` }}></div>
-                    </div>
-                    <div className="text-center">
-                        <span className="text-2xl font-black text-slate-800">{percentage.toFixed(1)}%</span>
-                        <p className="text-[10px] uppercase font-bold text-slate-400 mt-1">Faltam R$ {formatBRL(faltam)}</p>
+                <div className="p-5 pb-2">
+                    <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <Target className="w-5 h-5 text-blue-500 shrink-0" />
+                            <h3 className="font-bold text-blue-700 text-base truncate">{g.title}</h3>
+                        </div>
+                        <button onClick={() => handleDelete(g.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1 shrink-0"><Trash2 className="w-4 h-4"/></button>
                     </div>
 
+                    <div className="flex justify-between text-[11px] text-slate-500 font-semibold mb-2">
+                        <span>R$ {formatBRL(Number(g.current_amount))}</span>
+                        <span>Alvo: R$ {formatBRL(Number(g.target_amount))}</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden mb-3">
+                        <div className="bg-blue-500 h-full rounded-full transition-all duration-1000" style={{ width: `${percentage}%` }}></div>
+                    </div>
+                    <div className="text-center mb-1">
+                        <span className="text-2xl font-black text-slate-800">{percentage.toFixed(1)}%</span>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mt-0.5">Faltam R$ {formatBRL(faltam)}</p>
+                    </div>
+                </div>
+
+                <div className="px-5 pb-5 space-y-3">
                     {/* === PAINEL DE INTELIGÊNCIA === */}
                     {history.length >= 2 && faltam > 0 && (
-                        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl p-4 space-y-3">
-                            <div className="flex items-center gap-2 mb-1">
-                                <Brain className="w-4 h-4 text-indigo-500" />
-                                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">Previsão Inteligente</p>
+                        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl p-3 space-y-2.5">
+                            <div className="flex items-center gap-1.5">
+                                <Brain className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                                <p className="text-[9px] font-black text-indigo-600 uppercase tracking-wider">Previsão Inteligente</p>
                             </div>
-                            <div className="grid grid-cols-3 gap-2">
-                                <div className="bg-white/70 rounded-lg p-2.5 text-center">
-                                    <p className="text-base font-black text-indigo-700">R$ {formatBRL(avgAporte)}</p>
-                                    <p className="text-[8px] text-slate-500 font-bold uppercase leading-tight">Média por Aporte</p>
+                            <div className="grid grid-cols-3 gap-1.5">
+                                <div className="bg-white/70 rounded-lg py-2 px-1 text-center overflow-hidden">
+                                    <p className="text-[11px] font-black text-indigo-700 truncate">{formatBRL(avgAporte)}</p>
+                                    <p className="text-[7px] text-slate-500 font-bold uppercase leading-tight mt-0.5">Média/Aporte</p>
                                 </div>
-                                <div className="bg-white/70 rounded-lg p-2.5 text-center">
-                                    <p className="text-base font-black text-indigo-700">R$ {formatBRL(mediaMensal)}</p>
-                                    <p className="text-[8px] text-slate-500 font-bold uppercase leading-tight">Média Mensal</p>
+                                <div className="bg-white/70 rounded-lg py-2 px-1 text-center overflow-hidden">
+                                    <p className="text-[11px] font-black text-indigo-700 truncate">{formatBRL(mediaMensal)}</p>
+                                    <p className="text-[7px] text-slate-500 font-bold uppercase leading-tight mt-0.5">Média/Mês</p>
                                 </div>
-                                <div className="bg-white/70 rounded-lg p-2.5 text-center">
-                                    <p className="text-base font-black text-indigo-700">{history.length}</p>
-                                    <p className="text-[8px] text-slate-500 font-bold uppercase leading-tight">Aportes Feitos</p>
+                                <div className="bg-white/70 rounded-lg py-2 px-1 text-center">
+                                    <p className="text-[11px] font-black text-indigo-700">{history.length}</p>
+                                    <p className="text-[7px] text-slate-500 font-bold uppercase leading-tight mt-0.5">Feitos</p>
                                 </div>
                             </div>
-                            <div className="bg-white/80 rounded-lg p-3 text-center border border-indigo-100 space-y-1.5">
-                                <p className="text-xs text-slate-600 leading-relaxed">
-                                    Faltam R$ {formatBRL(faltam)} ÷ R$ {formatBRL(avgAporte)} = <span className="font-black text-indigo-700">~{aportesRestantes} aportes</span>
+                            <div className="bg-white/80 rounded-lg p-2.5 border border-indigo-100 space-y-1">
+                                <p className="text-[11px] text-slate-700 text-center font-semibold">
+                                    Faltam <span className="font-black text-indigo-700">~{aportesRestantes} aportes</span>
+                                    {mesesRestantes > 0 && <span className="text-slate-400"> (~{mesesRestantes} {mesesRestantes === 1 ? 'mês' : 'meses'})</span>}
                                 </p>
-                                {mesesRestantes > 0 && (
-                                    <p className="text-[10px] text-slate-500 font-semibold">
-                                        Cadência mensal: ~{mesesRestantes} {mesesRestantes === 1 ? 'mês' : 'meses'} restantes
-                                    </p>
-                                )}
                                 {previsaoData && (
-                                    <p className="text-[10px] text-slate-500 font-semibold">
-                                        Previsão de conclusão: <span className="font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">{previsaoData}</span>
+                                    <p className="text-[10px] text-slate-500 text-center font-semibold">
+                                        Conclusão: <span className="font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">{previsaoData}</span>
                                     </p>
                                 )}
                             </div>
                         </div>
                     )}
                     {history.length === 1 && faltam > 0 && (
-                        <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-center">
+                        <div className="bg-amber-50 border border-amber-100 rounded-xl p-2.5 text-center">
                             <p className="text-[10px] text-amber-700 font-semibold">
                                 <Zap className="w-3 h-3 inline mr-1" />
-                                Faça mais 1 aporte para ativar a Previsão Inteligente!
+                                +1 aporte para ativar a Previsão Inteligente
                             </p>
                         </div>
                     )}
                     {percentage >= 100 && (
                         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center">
-                            <p className="text-sm font-black text-emerald-700">🎉 Meta Alcançada! Parabéns!</p>
+                            <p className="text-sm font-black text-emerald-700">🎉 Meta Alcançada!</p>
                         </div>
                     )}
 
                     {/* Formulário de Aporte */}
                     {faltam > 0 && (
-                        <div className="flex gap-2 items-center border border-blue-100 rounded-xl p-2 bg-blue-50/50 transition-colors focus-within:border-blue-300">
-                            <div className="text-xs text-blue-400 font-bold pl-2 whitespace-nowrap">R$</div>
-                            <input 
-                                value={aporteForm.goalId === g.id ? aporteForm.amount : ''} 
-                                onChange={e => setAporteForm({ goalId: g.id, amount: e.target.value })} 
-                                type="number" 
-                                step="0.01"
-                                placeholder="Valor do aporte" 
-                                className="w-full text-sm p-2 outline-none bg-transparent" 
-                            />
+                        <div className="space-y-2">
+                            <div className="flex items-center border border-blue-200 rounded-xl bg-white overflow-hidden focus-within:ring-2 focus-within:ring-blue-400/50">
+                                <span className="text-xs text-blue-500 font-bold px-3 bg-blue-50 py-3 border-r border-blue-100">R$</span>
+                                <input 
+                                    value={aporteForm.goalId === g.id ? aporteForm.amount : ''} 
+                                    onChange={e => setAporteForm({ goalId: g.id, amount: e.target.value })} 
+                                    type="number" 
+                                    step="0.01"
+                                    placeholder="Ex: 500.00" 
+                                    className="flex-1 text-sm p-3 outline-none bg-transparent min-w-0" 
+                                />
+                            </div>
                             <button 
                                 onClick={() => handleAporte(g.id, g.title)} 
-                                className="bg-blue-600 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap transition-colors flex items-center gap-1"
+                                className="w-full bg-blue-600 text-white font-bold text-sm py-3 rounded-xl shadow-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 active:scale-[0.98]"
                             >
-                                <Plus className="w-4 h-4" /> Aportar
+                                <Plus className="w-4 h-4" /> Fazer Aporte
                             </button>
                         </div>
                     )}
@@ -314,7 +316,7 @@ export default function MetasPage() {
                             )}
                         </div>
                     )}
-                </CardContent>
+                </div>
             </Card>
         )})}
       </div>
