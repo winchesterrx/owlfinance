@@ -154,28 +154,30 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 4 Cards Principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-           <div className="flex items-center gap-2 text-slate-500 mb-2 text-sm font-medium"><TrendingUp className="w-4 h-4 text-green-500"/> Total Entradas Mês</div>
-           <div className="text-2xl font-bold text-green-600">R$ {data.currentMonthIncome.toFixed(2)}</div>
+      {/* 4 Cards Principais - Compactos no Mobile (2x2) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <Card className="p-3 md:p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+           <div className="flex items-center gap-1.5 text-slate-500 mb-1 md:mb-2 text-[10px] md:text-sm font-medium"><TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-green-500"/> <span className="truncate">Entradas Mês</span></div>
+           <div className="text-lg md:text-2xl font-bold text-green-600">R$ {data.currentMonthIncome.toFixed(2)}</div>
         </Card>
-        <Card className="p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-           <div className="flex items-center gap-2 text-slate-500 mb-2 text-sm font-medium"><TrendingDown className="w-4 h-4 text-red-500"/> Total Saídas Mês</div>
-           <div className="text-2xl font-bold text-red-600">R$ {data.totalMonthExpenses.toFixed(2)}</div>
+        <Card className="p-3 md:p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+           <div className="flex items-center gap-1.5 text-slate-500 mb-1 md:mb-2 text-[10px] md:text-sm font-medium"><TrendingDown className="w-3 h-3 md:w-4 md:h-4 text-red-500"/> <span className="truncate">Saídas Mês</span></div>
+           <div className="text-lg md:text-2xl font-bold text-red-600">R$ {data.totalMonthExpenses.toFixed(2)}</div>
         </Card>
-        <Card className="p-5 rounded-2xl border border-slate-200 shadow-sm">
-           <div className="flex items-center gap-2 text-slate-500 mb-2 text-sm font-medium"><Wallet className="w-4 h-4 text-blue-500"/> Saldo Líquido Geral</div>
-           <div className="text-2xl font-bold text-blue-600 mb-1">R$ {data.netBalance.toFixed(2)}</div>
+        <Card className="p-3 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+           <div className="flex items-center gap-1.5 text-slate-500 mb-1 md:mb-2 text-[10px] md:text-sm font-medium"><Wallet className="w-3 h-3 md:w-4 md:h-4 text-blue-500"/> <span className="truncate">Saldo Geral</span></div>
+           <div className="text-lg md:text-2xl font-bold text-blue-600 mb-1">R$ {data.netBalance.toFixed(2)}</div>
         </Card>
-        <Card className="p-5 rounded-2xl border border-slate-200 shadow-sm">
-           <div className="flex items-center gap-2 text-slate-500 mb-2 text-sm font-medium"><Wallet className="w-4 h-4 text-emerald-500"/> Saldo Conta Principal</div>
-           <div className="text-2xl font-bold text-emerald-600">R$ {Number(data.walletBalances.find((w:any) => w.wallet_source === 'Conta Principal')?.netBalance || 0).toFixed(2)}</div>
+        <Card className="p-3 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+           <div className="flex items-center gap-1.5 text-slate-500 mb-1 md:mb-2 text-[10px] md:text-sm font-medium"><Wallet className="w-3 h-3 md:w-4 md:h-4 text-emerald-500"/> <span className="truncate">Conta Principal</span></div>
+           <div className="text-lg md:text-2xl font-bold text-emerald-600">R$ {Number(data.walletBalances.find((w:any) => w.wallet_source === 'Conta Principal')?.netBalance || 0).toFixed(2)}</div>
         </Card>
       </div>
 
-      {/* MÓDULO WALLETS & INSIGHTS DA RENDA */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="flex flex-col gap-6">
+
+        {/* MÓDULO WALLETS & INSIGHTS DA RENDA */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 order-3 md:order-1">
          <Card className="p-5 rounded-2xl border border-slate-200 shadow-sm col-span-2">
             <h3 className="font-semibold text-slate-800 mb-4 text-sm uppercase tracking-wider">Divisão de Saldo por Carteiras (Wallets)</h3>
             <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
@@ -202,9 +204,10 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* MÓDULO ANALÍTICO E GRÁFICOS */}
-      <h2 className="text-xl font-bold tracking-tight text-slate-900 mt-10 mb-4">Inteligência Financeira</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* MÓDULO ANALÍTICO E GRÁFICOS */}
+        <div className="order-4 md:order-2">
+          <h2 className="text-xl font-bold tracking-tight text-slate-900 mt-10 mb-4">Inteligência Financeira</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Gráfico 1: Destino da Renda (Donut) */}
           <Card className="p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center">
@@ -284,63 +287,11 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* --- PAINÉIS UNIFICADOS: ENTRADAS E SAÍDAS --- */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
+      {/* --- PAINÉIS UNIFICADOS: ENTRADAS E SAÍDAS --- PRIORIDADE NO MOBILE (ORDER-2) */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 order-2 md:order-3 mt-4 md:mt-8">
          
-         {/* --- PAINEL UNIFICADO DE ENTRADAS --- */}
-         <Card className="flex flex-col rounded-2xl border border-slate-200 shadow-sm overflow-hidden bg-white">
-            <div className="bg-green-50 p-4 border-b border-green-100 flex items-center justify-between">
-                <h2 className="font-bold text-green-800 flex items-center gap-2"><TrendingUp className="w-5 h-5"/> Entradas do Mês</h2>
-            </div>
-            <div className="p-5 space-y-6">
-                
-                {/* Lançamento Manual Embutido */}
-                <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Lançamento Avulso (Extra)</p>
-                    <div className="flex flex-col gap-3">
-                        <select value={entradaForm.category} onChange={e => setEntradaForm({...entradaForm, category: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-500/50">
-                            <option>Salário Líquido</option>
-                            <option>Vale Alimentação</option>
-                            <option>Freelance / Extra</option>
-                            <option>Rendimento</option>
-                        </select>
-                        <input value={entradaForm.description} onChange={e => setEntradaForm({...entradaForm, description: e.target.value})} placeholder="Nome (Ex: Conta Itaú)" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-500/50" />
-                        <div className="flex gap-3">
-                            <input value={entradaForm.amount} onChange={e => setEntradaForm({...entradaForm, amount: e.target.value})} type="number" placeholder="Valor R$" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-500/50" />
-                            <button onClick={() => handleAddTransaction('income')} className="px-4 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm flex items-center justify-center transition-colors"><Plus className="w-5 h-5"/></button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Lista de Entradas Configurada */}
-                <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2 mb-3">Previsões (Configuradas)</h3>
-                    {data.settingsConfig.filter((s:any) => s.setting_type === 'income').length === 0 && <p className="text-sm text-slate-400 py-2">Nenhuma previsão configurada.</p>}
-                    {data.settingsConfig.filter((s:any) => s.setting_type === 'income').map((s:any) => {
-                        const paidItem = isItemPaidChecklist(s.setting_name, 'income');
-                        return (
-                        <div key={s.id} className={`flex items-center justify-between p-3 border rounded-xl transition-all ${paidItem ? 'bg-green-50/50 border-green-200' : 'bg-white border-slate-200 hover:border-green-300'}`}>
-                            <div className="flex items-center gap-3 pl-1">
-                                <input 
-                                    type="checkbox" 
-                                    checked={!!paidItem} 
-                                    onChange={() => paidItem ? handleDelete(paidItem.id, true) : handleChecklistSubmit(s)} 
-                                    className="w-5 h-5 accent-green-600 cursor-pointer shrink-0"
-                                />
-                                <div>
-                                    <p className={`font-semibold text-sm ${paidItem ? 'text-green-700 line-through opacity-70' : 'text-slate-800'}`}>{s.setting_name}</p>
-                                    <p className="text-[10px] text-slate-500 uppercase">{s.setting_key}</p>
-                                </div>
-                            </div>
-                            <span className={`font-bold text-sm ${paidItem ? 'text-green-600/50 line-through' : 'text-green-600'}`}>R$ {Number(s.setting_value).toFixed(2)}</span>
-                        </div>
-                    )})}
-                </div>
-            </div>
-         </Card>
-
-         {/* --- PAINEL UNIFICADO DE SAÍDAS --- */}
-         <Card className="flex flex-col rounded-2xl border border-slate-200 shadow-sm overflow-hidden bg-white">
+         {/* --- PAINEL UNIFICADO DE SAÍDAS --- INVERTIDO NO MOBILE PRA VIR PRIMEIRO */}
+         <Card className="flex flex-col rounded-2xl border border-slate-200 shadow-sm overflow-hidden bg-white order-1 md:order-2">
             <div className="bg-red-50 p-4 border-b border-red-100 flex items-center justify-between">
                 <h2 className="font-bold text-red-800 flex items-center gap-2"><TrendingDown className="w-5 h-5"/> Saídas do Mês</h2>
             </div>
@@ -398,36 +349,98 @@ export default function DashboardPage() {
                         }, {});
 
                         return Object.keys(grouped).map((groupName, i) => {
-                            const groupTotal = grouped[groupName].reduce((sum:number, s:any) => sum + Number(s.setting_value), 0);
+                            const items = grouped[groupName];
+                            const allPaid = items.every((it:any) => isItemPaidChecklist(it.setting_name, 'expense', it.setting_key));
+                            
                             return (
                                 <details key={i} className="group border border-slate-200 bg-slate-50 rounded-xl overflow-hidden [&_summary::-webkit-details-marker]:hidden open:bg-slate-100 transition-colors">
-                                     <summary className="flex items-center justify-between p-3 cursor-pointer select-none">
-                                         <div className="flex items-center gap-2">
-                                             <div className="p-1.5 bg-white rounded-lg shadow-sm group-open:bg-blue-50">
-                                                 <Wallet className="w-4 h-4 text-slate-500 group-open:text-blue-500" />
-                                             </div>
-                                             <h4 className="font-bold text-slate-700 text-sm">{groupName}</h4>
-                                         </div>
-                                         <span className="font-bold text-xs text-slate-500 bg-white px-2 py-1 rounded shadow-sm">R$ {groupTotal.toFixed(2)}</span>
-                                     </summary>
-                                     <div className="p-2 space-y-1">
-                                         {grouped[groupName].map((s:any) => {
-                                             const paidItem = isItemPaidChecklist(s.setting_name, 'expense');
-                                             return (
-                                                 <div key={s.id} className={`flex items-center justify-between p-2 rounded-lg border border-transparent transition-all ${paidItem ? 'bg-red-50/50 border-red-100' : 'bg-white hover:border-slate-300'}`}>
-                                                     <div className="flex items-center gap-3 pl-1">
-                                                         <input type="checkbox" checked={!!paidItem} onChange={() => paidItem ? handleDelete(paidItem.id, true) : handleChecklistSubmit(s)} className="w-5 h-5 accent-red-600 cursor-pointer shrink-0" />
-                                                         <p className={`font-semibold text-sm ${paidItem ? 'text-red-700 line-through opacity-70' : 'text-slate-800'}`}>{s.setting_name}</p>
-                                                     </div>
-                                                     <span className={`font-bold text-xs ${paidItem ? 'text-red-500/50 line-through' : 'text-slate-600'}`}>R$ {Number(s.setting_value).toFixed(2)}</span>
-                                                 </div>
-                                             )
-                                         })}
-                                     </div>
+                                    <summary className="flex items-center justify-between p-3 cursor-pointer select-none">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${allPaid ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                                {allPaid ? <CheckCircle2 className="w-5 h-5"/> : <Receipt className="w-5 h-5"/>}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-slate-700 text-sm">{groupName}</h4>
+                                                <p className="text-[10px] text-slate-500 uppercase">{items.length} itens vinculados</p>
+                                            </div>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-slate-400 group-open:rotate-90 transition-transform" />
+                                    </summary>
+                                    <div className="p-3 pt-0 space-y-2 border-t border-slate-200 bg-white">
+                                        {items.map((s:any) => {
+                                            const paidItem = isItemPaidChecklist(s.setting_name, 'expense', s.setting_key);
+                                            return (
+                                                <div key={s.id} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${paidItem ? 'bg-green-50/50 border-green-100' : 'bg-slate-50 border-slate-200'}`}>
+                                                    <div className="flex items-center gap-3">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={!!paidItem} 
+                                                            onChange={() => paidItem ? handleDelete(paidItem.id, true) : handleChecklistSubmit(s)} 
+                                                            className="w-4 h-4 accent-red-600 cursor-pointer"
+                                                        />
+                                                        <p className={`text-xs font-semibold ${paidItem ? 'text-green-700 line-through opacity-60' : 'text-slate-700'}`}>{s.setting_name}</p>
+                                                    </div>
+                                                    <span className={`text-xs font-bold ${paidItem ? 'text-green-600/50' : 'text-red-600'}`}>R$ {Number(s.setting_value).toFixed(2)}</span>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
                                 </details>
                             )
                         })
                     })()}
+                </div>
+            </div>
+         </Card>
+
+         {/* --- PAINEL UNIFICADO DE ENTRADAS --- MOVIDO PRA DEPOIS DO DE SAIDAS NO MOBILE */}
+         <Card className="flex flex-col rounded-2xl border border-slate-200 shadow-sm overflow-hidden bg-white order-2 md:order-1">
+            <div className="bg-green-50 p-4 border-b border-green-100 flex items-center justify-between">
+                <h2 className="font-bold text-green-800 flex items-center gap-2"><TrendingUp className="w-5 h-5"/> Entradas do Mês</h2>
+            </div>
+            <div className="p-5 space-y-6">
+                
+                {/* Lançamento Manual Embutido */}
+                <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Lançamento Avulso (Extra)</p>
+                    <div className="flex flex-col gap-3">
+                        <select value={entradaForm.category} onChange={e => setEntradaForm({...entradaForm, category: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-500/50">
+                            <option>Salário Líquido</option>
+                            <option>Vale Alimentação</option>
+                            <option>Freelance / Extra</option>
+                            <option>Rendimento</option>
+                        </select>
+                        <input value={entradaForm.description} onChange={e => setEntradaForm({...entradaForm, description: e.target.value})} placeholder="Nome (Ex: Conta Itaú)" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-500/50" />
+                        <div className="flex gap-3">
+                            <input value={entradaForm.amount} onChange={e => setEntradaForm({...entradaForm, amount: e.target.value})} type="number" placeholder="Valor R$" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-500/50" />
+                            <button onClick={() => handleAddTransaction('income')} className="px-4 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm flex items-center justify-center transition-colors"><Plus className="w-5 h-5"/></button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Lista de Entradas Configurada */}
+                <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2 mb-3">Previsões (Configuradas)</h3>
+                    {data.settingsConfig.filter((s:any) => s.setting_type === 'income').length === 0 && <p className="text-sm text-slate-400 py-2">Nenhuma previsão configurada.</p>}
+                    {data.settingsConfig.filter((s:any) => s.setting_type === 'income').map((s:any) => {
+                        const paidItem = isItemPaidChecklist(s.setting_name, 'income');
+                        return (
+                        <div key={s.id} className={`flex items-center justify-between p-3 border rounded-xl transition-all ${paidItem ? 'bg-green-50/50 border-green-200' : 'bg-white border-slate-200 hover:border-green-300'}`}>
+                            <div className="flex items-center gap-3 pl-1">
+                                <input 
+                                    type="checkbox" 
+                                    checked={!!paidItem} 
+                                    onChange={() => paidItem ? handleDelete(paidItem.id, true) : handleChecklistSubmit(s)} 
+                                    className="w-5 h-5 accent-green-600 cursor-pointer shrink-0"
+                                />
+                                <div>
+                                    <p className={`font-semibold text-sm ${paidItem ? 'text-green-700 line-through opacity-70' : 'text-slate-800'}`}>{s.setting_name}</p>
+                                    <p className="text-[10px] text-slate-500 uppercase">{s.setting_key}</p>
+                                </div>
+                            </div>
+                            <span className={`font-bold text-sm ${paidItem ? 'text-green-600/50 line-through' : 'text-green-600'}`}>R$ {Number(s.setting_value).toFixed(2)}</span>
+                        </div>
+                    )})}
                 </div>
             </div>
          </Card>
