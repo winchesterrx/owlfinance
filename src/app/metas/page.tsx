@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Target, Plus, Trash2, History, ChevronDown, ChevronUp } from 'lucide-react'
+import { Target, Plus, Trash2, History, ChevronDown, ChevronUp, Brain, Zap } from 'lucide-react'
 
 // Formatação Brasileira de Moeda
 const formatBRL = (value: number) => {
@@ -18,7 +18,17 @@ export default function MetasPage() {
     try {
       const res = await fetch('/api/goals')
       const json = await res.json()
-      if(Array.isArray(json)) setGoals(json)
+      if(Array.isArray(json)) {
+        setGoals(json)
+        // Auto-carregar histórico de cada meta para a previsão inteligente
+        for (const goal of json) {
+          try {
+            const hRes = await fetch(`/api/transactions?goal_id=${goal.id}`)
+            const hJson = await hRes.json()
+            setGoalHistory((prev: any) => ({ ...prev, [goal.id]: Array.isArray(hJson) ? hJson : [] }))
+          } catch(e) {}
+        }
+      }
     } catch (err) {
       console.error(err)
     }
@@ -110,9 +120,39 @@ export default function MetasPage() {
         )}
         {goals.map((g: any) => {
             const percentage = Math.min((Number(g.current_amount) / Number(g.target_amount)) * 100, 100);
-            const faltam = Number(g.target_amount) - Number(g.current_amount);
+            const faltam = Math.max(Number(g.target_amount) - Number(g.current_amount), 0);
             const history = goalHistory[g.id] || [];
             const isExpanded = expandedGoal === g.id;
+
+            // === INTELIGÊNCIA DE PREVISÃO ===
+            let avgAporte = 0;
+            let aportesMensais = 0;
+            let mesesRestantes = 0;
+            let previsaoData = '';
+            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+            if (history.length > 0) {
+                // Calcular média dos aportes
+                const totalAportado = history.reduce((sum: number, h: any) => sum + Number(h.amount), 0);
+                avgAporte = totalAportado / history.length;
+
+                // Agrupar por mês para saber quantos meses distintos teve aportes
+                const mesesUnicos = new Set(history.map((h: any) => {
+                    const d = new Date(h.transaction_date);
+                    return `${d.getFullYear()}-${d.getMonth()}`;
+                }));
+                aportesMensais = mesesUnicos.size;
+
+                // Calcular média mensal (total / meses distintos)
+                const mediaMensal = aportesMensais > 0 ? totalAportado / aportesMensais : avgAporte;
+
+                if (mediaMensal > 0 && faltam > 0) {
+                    mesesRestantes = Math.ceil(faltam / mediaMensal);
+                    const dataFinal = new Date();
+                    dataFinal.setMonth(dataFinal.getMonth() + mesesRestantes);
+                    previsaoData = `${monthNames[dataFinal.getMonth()]}/${dataFinal.getFullYear()}`;
+                }
+            }
 
             return (
             <Card key={g.id} className="rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden hover:border-blue-300 transition-all">
@@ -132,8 +172,51 @@ export default function MetasPage() {
                     </div>
                     <div className="text-center">
                         <span className="text-2xl font-black text-slate-800">{percentage.toFixed(1)}%</span>
-                        <p className="text-[10px] uppercase font-bold text-slate-400 mt-1">Faltam R$ {formatBRL(Math.max(faltam, 0))}</p>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mt-1">Faltam R$ {formatBRL(faltam)}</p>
                     </div>
+
+                    {/* === PAINEL DE INTELIGÊNCIA === */}
+                    {history.length >= 2 && faltam > 0 && (
+                        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl p-4 space-y-3">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Brain className="w-4 h-4 text-indigo-500" />
+                                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">Previsão Inteligente</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-white/70 rounded-lg p-2.5 text-center">
+                                    <p className="text-lg font-black text-indigo-700">R$ {formatBRL(avgAporte)}</p>
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase">Média por Aporte</p>
+                                </div>
+                                <div className="bg-white/70 rounded-lg p-2.5 text-center">
+                                    <p className="text-lg font-black text-indigo-700">{aportesMensais}</p>
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase">{aportesMensais === 1 ? 'Mês Ativo' : 'Meses Ativos'}</p>
+                                </div>
+                            </div>
+                            <div className="bg-white/80 rounded-lg p-3 text-center border border-indigo-100">
+                                <p className="text-xs text-slate-600 leading-relaxed">
+                                    No seu ritmo atual, faltam aproximadamente <span className="font-black text-indigo-700">{mesesRestantes} {mesesRestantes === 1 ? 'aporte' : 'aportes'}</span> para bater a meta.
+                                </p>
+                                {previsaoData && (
+                                    <p className="text-[10px] text-slate-500 mt-1.5 font-semibold">
+                                        Previsão de conclusão: <span className="font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">{previsaoData}</span>
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    {history.length === 1 && faltam > 0 && (
+                        <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-center">
+                            <p className="text-[10px] text-amber-700 font-semibold">
+                                <Zap className="w-3 h-3 inline mr-1" />
+                                Faça mais 1 aporte para ativar a Previsão Inteligente!
+                            </p>
+                        </div>
+                    )}
+                    {percentage >= 100 && (
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center">
+                            <p className="text-sm font-black text-emerald-700">🎉 Meta Alcançada! Parabéns!</p>
+                        </div>
+                    )}
 
                     {/* Botão de Histórico */}
                     <button onClick={() => toggleHistory(g.id)} className="w-full flex items-center justify-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 py-2.5 rounded-xl transition-colors">
