@@ -1,12 +1,14 @@
 "use client"
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, CheckCircle2, Play, Wallet, Receipt, User, Bell, Shield, ChevronRight } from 'lucide-react'
+import { Plus, CheckCircle2, Play, Wallet, Receipt, User, Bell, Shield, ChevronRight, Pencil, Trash2, X, Save } from 'lucide-react'
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<any[]>([])
   const [customCategories, setCustomCategories] = useState<any[]>([])
   const [form, setForm] = useState({ name: '', value: '', type: 'income', category: 'Salário Líquido' })
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editForm, setEditForm] = useState({ name: '', value: '', category: '' })
 
   const fetchSettings = () => {
     fetch('/api/settings').then(res => res.json()).then(data => setSettings(data))
@@ -52,8 +54,90 @@ export default function SettingsPage() {
     alert("Lançado com sucesso!");
   }
 
+  const handleDeleteSetting = async (id: number) => {
+    if (!confirm('Tem certeza que deseja excluir esta regra?')) return;
+    await fetch(`/api/settings?id=${id}`, { method: 'DELETE' });
+    fetchSettings();
+  }
+
+  const startEdit = (s: any) => {
+    setEditingId(s.id);
+    setEditForm({ name: s.setting_name, value: String(s.setting_value), category: s.setting_key });
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditForm({ name: '', value: '', category: '' });
+  }
+
+  const handleSaveEdit = async (s: any) => {
+    await fetch('/api/settings', {
+      method: 'PUT',
+      body: JSON.stringify({
+        id: s.id,
+        setting_name: editForm.name,
+        setting_value: parseFloat(editForm.value),
+        setting_key: editForm.category
+      })
+    });
+    setEditingId(null);
+    fetchSettings();
+  }
+
   const incomes = settings.filter(s => s.setting_type === 'income');
   const expenses = settings.filter(s => s.setting_type === 'expense');
+
+  const renderSettingItem = (s: any, colorClass: string, accentColor: string) => {
+    const isEditing = editingId === s.id;
+    
+    if (isEditing) {
+      return (
+        <div key={s.id} className="p-4 bg-blue-50 border-2 border-blue-300 rounded-xl space-y-3 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold text-blue-600 uppercase">Editando Regra</p>
+            <button onClick={cancelEdit} className="p-1 hover:bg-blue-100 rounded-lg transition-colors"><X className="w-4 h-4 text-blue-400" /></button>
+          </div>
+          <input value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} placeholder="Nome" className="w-full p-2.5 bg-white border border-blue-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/50" />
+          <div className="flex gap-3">
+            <input value={editForm.category} onChange={e => setEditForm({...editForm, category: e.target.value})} placeholder="Categoria" className="w-1/2 p-2.5 bg-white border border-blue-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/50" />
+            <input type="number" step="0.01" value={editForm.value} onChange={e => setEditForm({...editForm, value: e.target.value})} placeholder="Valor R$" className="w-1/2 p-2.5 bg-white border border-blue-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/50" />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={cancelEdit} className="flex-1 py-2 bg-white border border-slate-200 text-slate-600 font-semibold rounded-lg text-xs hover:bg-slate-50 transition-colors">Cancelar</button>
+            <button onClick={() => handleSaveEdit(s)} className="flex-1 py-2 bg-blue-600 text-white font-bold rounded-lg text-xs hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"><Save className="w-3.5 h-3.5" /> Salvar</button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div key={s.id} className={`group p-4 bg-white border border-slate-200 rounded-xl hover:border-${accentColor}-300 hover:shadow-sm transition-all flex items-center justify-between`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-full bg-${accentColor}-50 flex items-center justify-center border border-${accentColor}-100`}>
+            {s.setting_type === 'income' ? <CheckCircle2 className={`w-5 h-5 text-${accentColor}-500`} /> : <Receipt className={`w-5 h-5 text-${accentColor}-500`} />}
+          </div>
+          <div>
+            <p className="font-semibold text-slate-800 text-sm">{s.setting_name}</p>
+            <p className="text-xs text-slate-500">{s.setting_key}</p>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <p className={`font-bold text-${accentColor}-600`}>R$ {Number(s.setting_value).toFixed(2)}</p>
+          <div className="flex items-center gap-1">
+            <button onClick={() => handleAntecipar(s)} title="Lançar agora" className="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-500 hover:text-green-700 bg-slate-50 hover:bg-green-50 px-2 py-1 rounded transition-all">
+              <Play className="w-3 h-3"/>
+            </button>
+            <button onClick={() => startEdit(s)} title="Editar" className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors">
+              <Pencil className="w-3.5 h-3.5"/>
+            </button>
+            <button onClick={() => handleDeleteSetting(s.id)} title="Excluir" className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors">
+              <Trash2 className="w-3.5 h-3.5"/>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 max-w-6xl mx-auto pb-12 animate-in fade-in duration-700">
@@ -64,7 +148,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Seção 1: Adicionar Regra (Formato mais horizontal e contido) */}
+      {/* Seção 1: Adicionar Regra */}
       <section>
         <div className="flex items-center gap-2 mb-4">
            <Wallet className="w-5 h-5 text-blue-600" />
@@ -129,7 +213,7 @@ export default function SettingsPage() {
         </Card>
       </section>
 
-      {/* Seção 2: Listagem em duas colunas organizadas */}
+      {/* Seção 2: Listagem */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
           <div className="flex items-center gap-2 mb-4">
@@ -138,25 +222,7 @@ export default function SettingsPage() {
           </div>
           <div className="space-y-3">
             {incomes.length === 0 && <div className="text-sm text-slate-400 p-4 border border-dashed border-slate-300 rounded-xl text-center">Nenhuma configurada.</div>}
-            {incomes.map((s, i) => (
-              <div key={i} className="group p-4 bg-white border border-slate-200 rounded-xl hover:border-green-300 hover:shadow-sm transition-all flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center border border-green-100">
-                    <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-800 text-sm">{s.setting_name}</p>
-                    <p className="text-xs text-slate-500">{s.setting_key}</p>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <p className="font-bold text-green-600">R$ {Number(s.setting_value).toFixed(2)}</p>
-                  <button onClick={() => handleAntecipar(s)} title="Adiantar recebimento para o mês atual" className="invisible group-hover:visible opacity-0 group-hover:opacity-100 flex items-center gap-1 text-[10px] uppercase font-bold text-green-700 bg-green-50 px-2 py-1 rounded transition-all hover:bg-green-100">
-                    <Play className="w-3 h-3"/> Antecipar
-                  </button>
-                </div>
-              </div>
-            ))}
+            {incomes.map(s => renderSettingItem(s, 'green', 'green'))}
           </div>
         </div>
 
@@ -167,30 +233,12 @@ export default function SettingsPage() {
           </div>
           <div className="space-y-3">
             {expenses.length === 0 && <div className="text-sm text-slate-400 p-4 border border-dashed border-slate-300 rounded-xl text-center">Nenhuma configurada.</div>}
-            {expenses.map((s, i) => (
-              <div key={i} className="group p-4 bg-white border border-slate-200 rounded-xl hover:border-red-300 hover:shadow-sm transition-all flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center border border-red-100">
-                    <Receipt className="w-5 h-5 text-red-500" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-800 text-sm">{s.setting_name}</p>
-                    <p className="text-xs text-slate-500">{s.setting_key}</p>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <p className="font-bold text-red-600">R$ {Number(s.setting_value).toFixed(2)}</p>
-                  <button onClick={() => handleAntecipar(s)} title="Pagar antecipadamente no mês atual" className="invisible group-hover:visible opacity-0 group-hover:opacity-100 flex items-center gap-1 text-[10px] uppercase font-bold text-red-700 bg-red-50 px-2 py-1 rounded transition-all hover:bg-red-100">
-                    <Play className="w-3 h-3"/> Lançar Agora
-                  </button>
-                </div>
-              </div>
-            ))}
+            {expenses.map(s => renderSettingItem(s, 'red', 'red'))}
           </div>
         </div>
       </section>
 
-      {/* Seção 3: Sugestões e Outros Ajustes (Visuais) */}
+      {/* Seção 3: Opções do Sistema */}
       <section className="pt-8 border-t border-slate-200">
         <h2 className="text-xl font-bold text-slate-800 mb-6">Opções do Sistema</h2>
         

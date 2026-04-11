@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Wallet, Plus, CreditCard, FileText, CheckCircle2, Trash2, Target, CircleDashed, Receipt } from 'lucide-react'
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Wallet, Plus, CreditCard, FileText, CheckCircle2, Trash2, Target, CircleDashed, Receipt, Pencil, X, History } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar, Legend } from 'recharts'
 
@@ -11,6 +11,10 @@ export default function DashboardPage() {
   const [entradaForm, setEntradaForm] = useState({ category: 'Salário Líquido', description: '', amount: '' })
   const [saidaForm, setSaidaForm] = useState({ description: '', amount: '', category: '', subcategory: '', sourceWallet: 'Conta Principal' })
   const [aporteForm, setAporteForm] = useState({ amount: '', goalId: null })
+  const [editingTx, setEditingTx] = useState<any>(null)
+  const [editForm, setEditForm] = useState({ title: '', amount: '', category: '', subcategory: '', wallet_source: '' })
+  const [goalHistory, setGoalHistory] = useState<any>({})
+  const [expandedGoal, setExpandedGoal] = useState<number | null>(null)
 
   const fetchDashboard = async (targetDate: Date) => {
     const month = targetDate.getMonth() + 1
@@ -123,6 +127,54 @@ export default function DashboardPage() {
       })
       setAporteForm({ amount: '', goalId: null })
       fetchDashboard(date)
+      // Reload history if expanded
+      if (expandedGoal === goalId) fetchGoalHistory(goalId);
+  }
+
+  const handleEditTransaction = async () => {
+      if (!editingTx) return;
+      await fetch('/api/transactions', {
+          method: 'PUT',
+          body: JSON.stringify({
+              id: editingTx.id,
+              title: editForm.title,
+              amount: parseFloat(editForm.amount),
+              category: editForm.category,
+              subcategory: editForm.subcategory || null,
+              wallet_source: editForm.wallet_source,
+              status: editingTx.status
+          })
+      })
+      setEditingTx(null)
+      fetchDashboard(date)
+  }
+
+  const openEditModal = (t: any) => {
+      setEditingTx(t)
+      setEditForm({
+          title: t.title,
+          amount: String(t.amount),
+          category: t.category || '',
+          subcategory: t.subcategory || '',
+          wallet_source: t.wallet_source || 'Conta Principal'
+      })
+  }
+
+  const fetchGoalHistory = async (goalId: number) => {
+      try {
+          const res = await fetch(`/api/transactions?goal_id=${goalId}`);
+          const json = await res.json();
+          setGoalHistory((prev: any) => ({ ...prev, [goalId]: json }));
+      } catch(e) { console.error(e); }
+  }
+
+  const toggleGoalHistory = (goalId: number) => {
+      if (expandedGoal === goalId) {
+          setExpandedGoal(null);
+      } else {
+          setExpandedGoal(goalId);
+          fetchGoalHistory(goalId);
+      }
   }
 
   if (!data) return <div className="h-full flex items-center justify-center text-slate-400 font-medium animate-pulse">Sincronizando dados automáticos...</div>
@@ -460,8 +512,9 @@ export default function DashboardPage() {
           )}
           {data.activeGoals && data.activeGoals.map((g: any) => {
               const p = Math.min((Number(g.current_amount) / Number(g.target_amount)) * 100, 100);
+              const history = goalHistory[g.id] || [];
               return (
-                  <Card key={g.id} className="p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
+                  <Card key={g.id} className="p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
                       <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2"><Target className="w-5 h-5 text-blue-500"/><h3 className="font-bold text-slate-800">{g.title}</h3></div>
                           <span className="text-sm font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">{p.toFixed(1)}%</span>
@@ -469,10 +522,36 @@ export default function DashboardPage() {
                       <div className="flex justify-between text-xs text-slate-500 mb-2 font-medium"><span>Acumulado: R$ {Number(g.current_amount).toFixed(2)}</span><span>Alvo: R$ {Number(g.target_amount).toFixed(2)}</span></div>
                       <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden mb-4"><div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${p}%` }}></div></div>
                       
-                      <div className="flex gap-2 items-center border border-slate-100 rounded-lg p-2 bg-slate-50 transition-colors focus-within:border-blue-300">
+                      <div className="flex gap-2 items-center border border-slate-100 rounded-lg p-2 bg-slate-50 transition-colors focus-within:border-blue-300 mb-3">
                           <input value={aporteForm.goalId === g.id ? aporteForm.amount : ''} onChange={e => setAporteForm({ goalId: g.id, amount: e.target.value })} type="number" placeholder="Aporte R$" className="w-full text-sm p-2 outline-none bg-transparent" />
                           <button onClick={() => handleAporte(g.id, g.title)} className="bg-blue-600 text-white font-bold text-xs px-4 py-2 rounded shadow-sm hover:bg-blue-700 whitespace-nowrap">Aportar R$</button>
                       </div>
+
+                      {/* Botão de Histórico */}
+                      <button onClick={() => toggleGoalHistory(g.id)} className="w-full flex items-center justify-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 py-2 rounded-lg transition-colors">
+                          <History className="w-3.5 h-3.5" /> {expandedGoal === g.id ? 'Ocultar Histórico' : 'Ver Histórico de Aportes'}
+                      </button>
+
+                      {/* Histórico de Aportes Expandível */}
+                      {expandedGoal === g.id && (
+                          <div className="mt-3 space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                              {history.length === 0 && <p className="text-xs text-slate-400 text-center py-2">Nenhum aporte registrado.</p>}
+                              {history.map((h: any) => (
+                                  <div key={h.id} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-xs">
+                                      <div>
+                                          <p className="font-semibold text-slate-700">{h.title}</p>
+                                          <p className="text-slate-400">{new Date(h.transaction_date).toLocaleDateString()}</p>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                          <span className="font-bold text-blue-600">R$ {Number(h.amount).toFixed(2)}</span>
+                                          <button onClick={() => { handleDelete(h.id); setTimeout(() => { fetchGoalHistory(g.id); fetchDashboard(date); }, 500); }} className="p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors">
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
+                      )}
                   </Card>
               )
           })}
@@ -490,44 +569,52 @@ export default function DashboardPage() {
                 <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 text-xs uppercase tracking-wider">
                     <tr>
                         <th className="p-4 rounded-tl-2xl">Tipo</th>
-                        <th className="p-4">Data / Hora</th>
+                        <th className="p-4">Data</th>
                         <th className="p-4">Descrição</th>
-                        <th className="p-4">Origem</th>
-                        <th className="p-4">Categoria</th>
-                        <th className="p-4 text-right rounded-tr-2xl">Valor</th>
+                        <th className="p-4 hidden md:table-cell">Origem</th>
+                        <th className="p-4 hidden md:table-cell">Categoria</th>
+                        <th className="p-4 text-right">Valor</th>
+                        <th className="p-4 text-center rounded-tr-2xl">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {data.recentTransactions.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-slate-400 font-medium">Nenhuma movimentação neste mês.</td></tr>}
+                    {data.recentTransactions.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-slate-400 font-medium">Nenhuma movimentação neste mês.</td></tr>}
                     {data.recentTransactions.map((t:any) => (
-                        <tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors group relative">
-                            <td className="p-4 w-16">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${t.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                                    {t.type === 'income' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                        <tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                            <td className="p-3 md:p-4 w-12 md:w-16">
+                                <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center ${t.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                    {t.type === 'income' ? <TrendingUp className="w-3.5 h-3.5 md:w-4 md:h-4" /> : <TrendingDown className="w-3.5 h-3.5 md:w-4 md:h-4" />}
                                 </div>
                             </td>
-                            <td className="p-4 text-slate-500 font-medium whitespace-nowrap">{new Date(t.transaction_date).toLocaleDateString()}</td>
-                            <td className="p-4 font-bold text-slate-800 whitespace-nowrap">{t.title}</td>
-                            <td className="p-4 whitespace-nowrap">
+                            <td className="p-3 md:p-4 text-slate-500 font-medium whitespace-nowrap text-xs md:text-sm">{new Date(t.transaction_date).toLocaleDateString()}</td>
+                            <td className="p-3 md:p-4 font-bold text-slate-800 whitespace-nowrap text-xs md:text-sm">{t.title}</td>
+                            <td className="p-4 whitespace-nowrap hidden md:table-cell">
                                 <span className="px-3 py-1 bg-slate-100 border border-slate-200 text-slate-600 text-xs font-semibold rounded-full shadow-sm">
                                     {t.wallet_source || 'Conta Principal'}
                                 </span>
                             </td>
-                            <td className="p-4 text-slate-500 text-xs uppercase font-semibold whitespace-nowrap">
+                            <td className="p-4 text-slate-500 text-xs uppercase font-semibold whitespace-nowrap hidden md:table-cell">
                                 {t.category}{t.subcategory ? ` > ${t.subcategory}` : ''}
                             </td>
-                            <td className="p-4 text-right">
-                                <div className="flex flex-col items-end gap-1">
-                                    <span className={`font-bold text-base ${t.type === 'income' ? 'text-green-600' : 'text-slate-800'}`}>
+                            <td className="p-3 md:p-4 text-right">
+                                <div className="flex flex-col items-end gap-0.5">
+                                    <span className={`font-bold text-sm md:text-base ${t.type === 'income' ? 'text-green-600' : 'text-slate-800'}`}>
                                         {t.type === 'income' ? '+' : '-'} R$ {Number(t.amount).toFixed(2)}
                                     </span>
-                                    <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-md font-bold ${t.status === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
+                                    <span className={`text-[8px] md:text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-md font-bold ${t.status === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
                                         {t.status === 'paid' ? 'Efetivado' : 'Aguardando'}
                                     </span>
                                 </div>
-                                <button onClick={() => handleDelete(t.id)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 p-2 shadow-sm border border-slate-200 rounded-lg transition-all bg-white z-10">
-                                    <Trash2 className="w-4 h-4"/>
-                                </button>
+                            </td>
+                            <td className="p-2 md:p-4 text-center">
+                                <div className="flex items-center justify-center gap-1">
+                                    <button onClick={() => openEditModal(t)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Editar">
+                                        <Pencil className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button onClick={() => handleDelete(t.id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Excluir">
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     ))}
@@ -535,6 +622,42 @@ export default function DashboardPage() {
             </table>
         </div>
       </Card>
+
+      {/* === MODAL DE EDIÇÃO DE TRANSAÇÃO === */}
+      {editingTx && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setEditingTx(null)}>
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-slate-800">Editar Lançamento</h3>
+                      <button onClick={() => setEditingTx(null)} className="p-1 hover:bg-slate-100 rounded-lg transition-colors"><X className="w-5 h-5 text-slate-400" /></button>
+                  </div>
+                  <div className="space-y-3">
+                      <div>
+                          <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Descrição</label>
+                          <input value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/50" />
+                      </div>
+                      <div>
+                          <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Valor R$</label>
+                          <input type="number" step="0.01" value={editForm.amount} onChange={e => setEditForm({...editForm, amount: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/50" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                          <div>
+                              <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Categoria</label>
+                              <input value={editForm.category} onChange={e => setEditForm({...editForm, category: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/50" />
+                          </div>
+                          <div>
+                              <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Carteira</label>
+                              <input value={editForm.wallet_source} onChange={e => setEditForm({...editForm, wallet_source: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/50" />
+                          </div>
+                      </div>
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                      <button onClick={() => setEditingTx(null)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors text-sm">Cancelar</button>
+                      <button onClick={handleEditTransaction} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors text-sm shadow-sm">Salvar Alterações</button>
+                  </div>
+              </div>
+          </div>
+      )}
       
     </div>
   )
