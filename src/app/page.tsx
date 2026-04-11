@@ -142,11 +142,11 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4 max-w-6xl mx-auto pb-12">
       {/* VERSÃO MOBILE: LANÇAMENTO RÁPIDO NO TOPO ABSOLUTO */}
-      <div className="md:hidden block px-2 pt-2">
-          <Card className="p-4 rounded-2xl border-2 border-red-400 bg-red-50 shadow-lg animate-in slide-in-from-top duration-500">
+      <div className="md:hidden block px-2 pt-2 bg-yellow-400/20">
+          <Card className="p-4 rounded-2xl border-2 border-red-600 bg-white shadow-2xl animate-bounce-subtle">
                 <div className="flex justify-between items-center mb-3">
                     <p className="text-[10px] font-black text-red-600 uppercase tracking-[0.2em]">Lançar Gasto Agora</p>
-                    <span className="text-[8px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">V 2.1 - LIVE</span>
+                    <span className="text-[10px] bg-red-600 text-white px-3 py-1 rounded-full font-black animate-pulse">V 2.2 - ATUALIZADO</span>
                 </div>
                 <div className="space-y-3">
                     <div className="flex gap-2">
