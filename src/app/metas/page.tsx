@@ -146,26 +146,36 @@ export default function MetasPage() {
 
             // === INTELIGÊNCIA DE PREVISÃO ===
             let avgAporte = 0;
+            let mediaMensal = 0;
             let aportesMensais = 0;
+            let aportesRestantes = 0;
             let mesesRestantes = 0;
             let previsaoData = '';
             const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
             if (history.length > 0) {
-                // Calcular média dos aportes
+                // Total aportado via transações rastreadas
                 const totalAportado = history.reduce((sum: number, h: any) => sum + Number(h.amount), 0);
+                
+                // Média por aporte individual
                 avgAporte = totalAportado / history.length;
 
-                // Agrupar por mês para saber quantos meses distintos teve aportes
+                // Quantos aportes faltam? (valor restante / média por aporte)
+                if (avgAporte > 0 && faltam > 0) {
+                    aportesRestantes = Math.ceil(faltam / avgAporte);
+                }
+
+                // Agrupar por mês para saber a cadência mensal
                 const mesesUnicos = new Set(history.map((h: any) => {
                     const d = new Date(h.transaction_date);
                     return `${d.getFullYear()}-${d.getMonth()}`;
                 }));
                 aportesMensais = mesesUnicos.size;
 
-                // Calcular média mensal (total / meses distintos)
-                const mediaMensal = aportesMensais > 0 ? totalAportado / aportesMensais : avgAporte;
+                // Média mensal (quanto aporta por mês no total)
+                mediaMensal = aportesMensais > 0 ? totalAportado / aportesMensais : avgAporte;
 
+                // Previsão de data (baseada na cadência mensal)
                 if (mediaMensal > 0 && faltam > 0) {
                     mesesRestantes = Math.ceil(faltam / mediaMensal);
                     const dataFinal = new Date();
@@ -202,22 +212,31 @@ export default function MetasPage() {
                                 <Brain className="w-4 h-4 text-indigo-500" />
                                 <p className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">Previsão Inteligente</p>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-3 gap-2">
                                 <div className="bg-white/70 rounded-lg p-2.5 text-center">
-                                    <p className="text-lg font-black text-indigo-700">R$ {formatBRL(avgAporte)}</p>
-                                    <p className="text-[9px] text-slate-500 font-bold uppercase">Média por Aporte</p>
+                                    <p className="text-base font-black text-indigo-700">R$ {formatBRL(avgAporte)}</p>
+                                    <p className="text-[8px] text-slate-500 font-bold uppercase leading-tight">Média por Aporte</p>
                                 </div>
                                 <div className="bg-white/70 rounded-lg p-2.5 text-center">
-                                    <p className="text-lg font-black text-indigo-700">{aportesMensais}</p>
-                                    <p className="text-[9px] text-slate-500 font-bold uppercase">{aportesMensais === 1 ? 'Mês Ativo' : 'Meses Ativos'}</p>
+                                    <p className="text-base font-black text-indigo-700">R$ {formatBRL(mediaMensal)}</p>
+                                    <p className="text-[8px] text-slate-500 font-bold uppercase leading-tight">Média Mensal</p>
+                                </div>
+                                <div className="bg-white/70 rounded-lg p-2.5 text-center">
+                                    <p className="text-base font-black text-indigo-700">{history.length}</p>
+                                    <p className="text-[8px] text-slate-500 font-bold uppercase leading-tight">Aportes Feitos</p>
                                 </div>
                             </div>
-                            <div className="bg-white/80 rounded-lg p-3 text-center border border-indigo-100">
+                            <div className="bg-white/80 rounded-lg p-3 text-center border border-indigo-100 space-y-1.5">
                                 <p className="text-xs text-slate-600 leading-relaxed">
-                                    No seu ritmo atual, faltam aproximadamente <span className="font-black text-indigo-700">{mesesRestantes} {mesesRestantes === 1 ? 'aporte' : 'aportes'}</span> para bater a meta.
+                                    Faltam R$ {formatBRL(faltam)} ÷ R$ {formatBRL(avgAporte)} = <span className="font-black text-indigo-700">~{aportesRestantes} aportes</span>
                                 </p>
+                                {mesesRestantes > 0 && (
+                                    <p className="text-[10px] text-slate-500 font-semibold">
+                                        Cadência mensal: ~{mesesRestantes} {mesesRestantes === 1 ? 'mês' : 'meses'} restantes
+                                    </p>
+                                )}
                                 {previsaoData && (
-                                    <p className="text-[10px] text-slate-500 mt-1.5 font-semibold">
+                                    <p className="text-[10px] text-slate-500 font-semibold">
                                         Previsão de conclusão: <span className="font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">{previsaoData}</span>
                                     </p>
                                 )}
