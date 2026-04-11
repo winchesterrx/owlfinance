@@ -13,6 +13,7 @@ export default function MetasPage() {
   const [form, setForm] = useState({ title: '', target_amount: '', current_amount: '' })
   const [expandedGoal, setExpandedGoal] = useState<number | null>(null)
   const [goalHistory, setGoalHistory] = useState<any>({})
+  const [aporteForm, setAporteForm] = useState<any>({ goalId: null, amount: '' })
 
   const fetchGoals = async () => {
     try {
@@ -76,6 +77,25 @@ export default function MetasPage() {
           setExpandedGoal(goalId)
           fetchGoalHistory(goalId)
       }
+  }
+
+  const handleAporte = async (goalId: number, goalTitle: string) => {
+      if (!aporteForm.amount || Number(aporteForm.amount) <= 0) return;
+      await fetch('/api/transactions', {
+          method: 'POST',
+          body: JSON.stringify({
+              title: `Aporte: ${goalTitle}`,
+              amount: parseFloat(aporteForm.amount),
+              type: 'expense',
+              category: 'Metas',
+              status: 'paid',
+              transaction_date: new Date().toISOString().split('T')[0],
+              wallet_source: 'Conta Principal',
+              goal_id: goalId
+          })
+      })
+      setAporteForm({ goalId: null, amount: '' })
+      fetchGoals()
   }
 
   const handleDeleteAporte = async (aporteId: number, goalId: number) => {
@@ -215,6 +235,27 @@ export default function MetasPage() {
                     {percentage >= 100 && (
                         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center">
                             <p className="text-sm font-black text-emerald-700">🎉 Meta Alcançada! Parabéns!</p>
+                        </div>
+                    )}
+
+                    {/* Formulário de Aporte */}
+                    {faltam > 0 && (
+                        <div className="flex gap-2 items-center border border-blue-100 rounded-xl p-2 bg-blue-50/50 transition-colors focus-within:border-blue-300">
+                            <div className="text-xs text-blue-400 font-bold pl-2 whitespace-nowrap">R$</div>
+                            <input 
+                                value={aporteForm.goalId === g.id ? aporteForm.amount : ''} 
+                                onChange={e => setAporteForm({ goalId: g.id, amount: e.target.value })} 
+                                type="number" 
+                                step="0.01"
+                                placeholder="Valor do aporte" 
+                                className="w-full text-sm p-2 outline-none bg-transparent" 
+                            />
+                            <button 
+                                onClick={() => handleAporte(g.id, g.title)} 
+                                className="bg-blue-600 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap transition-colors flex items-center gap-1"
+                            >
+                                <Plus className="w-4 h-4" /> Aportar
+                            </button>
                         </div>
                     )}
 
