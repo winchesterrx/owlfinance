@@ -385,7 +385,7 @@ export default function DashboardPage() {
 
                 {/* Lista de Saídas Configurada (Acordeões Dinâmicos) */}
                 <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2 mb-3">Contas Fixas & Previsões</h3>
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2 mb-3">Contas Fixas {'&'} Previsões</h3>
                     {(() => {
                         const expenseSettings = data.settingsConfig.filter((s:any) => s.setting_type === 'expense');
                         if (expenseSettings.length === 0) return <p className="text-sm text-slate-400 py-2">Nenhuma conta fixa configurada.</p>;
