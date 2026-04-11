@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Wallet, Plus, CreditCard, FileText, CheckCircle2, Trash2, Target, CircleDashed } from 'lucide-react'
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Wallet, Plus, CreditCard, FileText, CheckCircle2, Trash2, Target, CircleDashed, Receipt } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar, Legend } from 'recharts'
 
@@ -321,6 +321,8 @@ export default function DashboardPage() {
                   <div className="w-full h-56 flex items-center justify-center text-slate-400 text-sm bg-slate-50 rounded-xl mt-2">Carteiras Vazias</div>
               )}
           </Card>
+        </div>
+      </div>
 
         {/* --- PAINÉIS UNIFICADOS: ENTRADAS E SAÍDAS --- PRIORIDADE NO MOBILE (ORDER-1 NO CONTAINER) */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 order-1 md:order-3 mt-0 md:mt-8">
@@ -480,6 +482,7 @@ export default function DashboardPage() {
             </div>
          </Card>
 
+      </div>
       </div>
 
       {/* METAS (GOALS) EMBUTIDAS */}

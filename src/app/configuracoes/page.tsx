@@ -213,13 +213,13 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-medium">
                    <div className="bg-white/10 p-3 rounded-xl border border-white/20 backdrop-blur-sm">
                       <strong className="block text-white mb-1">Para iPhone (Safari)</strong>
-                      1. Toque no ícone de {'"'}Compartilhar{'"'} (quadrado com seta pra cima).<br/>
-                      2. Role para baixo e toque em {'"'}Adicionar à Tela de Início{'"'}.
+                      1. Toque no ícone de &quot;Compartilhar&quot; (quadrado com seta pra cima).<br/>
+                      2. Role para baixo e toque em &quot;Adicionar à Tela de Início&quot;.
                    </div>
                    <div className="bg-white/10 p-3 rounded-xl border border-white/20 backdrop-blur-sm">
                       <strong className="block text-white mb-1">Para Android (Chrome)</strong>
-                      1. Toque nos {'"'}3 pontinhos{'"'} no canto superior direito.<br/>
-                      2. Toque em {'"'}Adicionar à Tela Inicial{'"'} ou {'"'}Instalar Aplicativo{'"'}.
+                      1. Toque nos &quot;3 pontinhos&quot; no canto superior direito.<br/>
+                      2. Toque em &quot;Adicionar à Tela Inicial&quot; ou &quot;Instalar Aplicativo&quot;.
                    </div>
                 </div>
              </div>
