@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Wallet, Plus, CreditCard, FileText, CheckCircle2, Trash2, Target, CircleDashed, Receipt, Pencil, X, History, WifiOff, Wifi, RefreshCw, CloudOff, CloudUpload, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Wallet, Plus, CreditCard, FileText, CheckCircle2, Trash2, Target, CircleDashed, Receipt, Pencil, X, History, WifiOff, Wifi, RefreshCw, CloudOff, CloudUpload, Loader2, Search, Download, SlidersHorizontal } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar, Legend } from 'recharts'
 import { useOfflineSync } from '@/lib/useOfflineSync'
@@ -21,6 +21,8 @@ export default function DashboardPage() {
   const [editForm, setEditForm] = useState({ title: '', amount: '', category: '', subcategory: '', wallet_source: '' })
   const [goalHistory, setGoalHistory] = useState<any>({})
   const [expandedGoal, setExpandedGoal] = useState<number | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
 
   // ─── Hook de Suporte Offline ───────────────────────────────────
   const {
@@ -93,7 +95,25 @@ export default function DashboardPage() {
       wallet_source: type === 'income' ? (form.description || 'Geral') : (saidaForm.sourceWallet || 'Conta Principal')
     };
 
-    await submitTransaction(
+    // Optimistic UI — atualiza o dashboard instantaneamente
+    const fakeId = Date.now();
+    setData((prev: any) => {
+      if (!prev) return prev;
+      const updated = {
+        ...prev,
+        recentTransactions: [{ ...payload, id: fakeId }, ...prev.recentTransactions],
+        currentMonthIncome: type === 'income' ? prev.currentMonthIncome + payload.amount : prev.currentMonthIncome,
+        totalMonthExpenses: type === 'expense' ? prev.totalMonthExpenses + payload.amount : prev.totalMonthExpenses,
+        netBalance: type === 'income' ? prev.netBalance + payload.amount : prev.netBalance - payload.amount,
+      };
+      // Salvar o estado atualizado no cache também
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      saveDashboardCache(month, year, updated);
+      return updated;
+    });
+
+    const result = await submitTransaction(
       '/api/transactions',
       'POST',
       payload,
@@ -103,7 +123,8 @@ export default function DashboardPage() {
     if (type === 'income') setEntradaForm({ category: 'Salário Líquido', description: '', amount: '' })
     else setSaidaForm({ ...saidaForm, category: '', subcategory: '', description: '', amount: '' })
     
-    fetchDashboard(date)
+    // Só busca do servidor se estava online (pra pegar o ID real)
+    if (!result.offline) fetchDashboard(date)
   }
 
   const handleChecklistSubmit = async (setting: any) => {
@@ -128,13 +149,21 @@ export default function DashboardPage() {
           netBalance: setting.setting_type === 'income' ? prev.netBalance + Number(setting.setting_value) : prev.netBalance - Number(setting.setting_value)
       }));
 
-      await submitTransaction(
+      // Salvar cache atualizado para uso offline
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      setData((prev: any) => {
+        if (prev) saveDashboardCache(month, year, prev);
+        return prev;
+      });
+
+      const result = await submitTransaction(
         '/api/transactions',
         'POST',
         fakeTransaction,
         `✅ Checklist: ${setting.setting_name} R$ ${formatBRL(Number(setting.setting_value))}`
       );
-      fetchDashboard(date)
+      if (!result.offline) fetchDashboard(date)
   }
 
   const handleDelete = async (id: number, bypassConfirm = false) => {
@@ -152,11 +181,21 @@ export default function DashboardPage() {
        }));
     }
 
-    await submitDelete(
+    // Salvar cache atualizado
+    setData((prev: any) => {
+      if (prev) {
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+        saveDashboardCache(month, year, prev);
+      }
+      return prev;
+    });
+
+    const result = await submitDelete(
       `/api/transactions?id=${id}`,
       `🗑 Excluir: ${t?.title || 'Transação'}`
     );
-    fetchDashboard(date)
+    if (!result.offline) fetchDashboard(date)
   }
 
   const handleAporte = async (goalId: number, goalTitle: string) => {
@@ -171,16 +210,39 @@ export default function DashboardPage() {
           wallet_source: saidaForm.sourceWallet || 'Conta Principal',
           goal_id: goalId
       };
-      await submitTransaction(
+
+      // Optimistic UI — atualiza dashboard + meta instantaneamente
+      const fakeId = Date.now();
+      setData((prev: any) => {
+        if (!prev) return prev;
+        const updated = {
+          ...prev,
+          recentTransactions: [{ ...payload, id: fakeId }, ...prev.recentTransactions],
+          totalMonthExpenses: prev.totalMonthExpenses + payload.amount,
+          netBalance: prev.netBalance - payload.amount,
+          activeGoals: prev.activeGoals?.map((g: any) => 
+            g.id === goalId 
+              ? { ...g, current_amount: Number(g.current_amount) + payload.amount }
+              : g
+          ),
+        };
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+        saveDashboardCache(month, year, updated);
+        return updated;
+      });
+
+      const result = await submitTransaction(
           '/api/transactions',
           'POST',
           payload,
           `🎯 Aporte: ${goalTitle} R$ ${formatBRL(payload.amount)}`
       );
       setAporteForm({ amount: '', goalId: null })
-      fetchDashboard(date)
-      // Reload history if expanded
-      if (expandedGoal === goalId) fetchGoalHistory(goalId);
+      if (!result.offline) {
+        fetchDashboard(date)
+        if (expandedGoal === goalId) fetchGoalHistory(goalId);
+      }
   }
 
   const handleEditTransaction = async () => {
@@ -245,6 +307,39 @@ export default function DashboardPage() {
   const isItemPaidChecklist = (settingName: string, type: string) => {
       return data.recentTransactions.find((t: any) => t.title === settingName && t.type === type && new Date(t.transaction_date).getMonth() === date.getMonth());
   }
+
+  // ─── Filtro do Extrato ───────────────────────────────────────
+  const filteredTransactions = data.recentTransactions.filter((t: any) => {
+    const matchesSearch = !searchQuery || 
+      t.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.wallet_source?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = filterType === 'all' || t.type === filterType;
+    return matchesSearch && matchesType;
+  });
+
+  // ─── Exportar CSV ────────────────────────────────────────────
+  const exportCSV = () => {
+    const headers = ['Data', 'Tipo', 'Descrição', 'Categoria', 'Carteira', 'Valor', 'Status'];
+    const rows = data.recentTransactions.map((t: any) => [
+      new Date(t.transaction_date).toLocaleDateString('pt-BR'),
+      t.type === 'income' ? 'Entrada' : 'Saída',
+      `"${(t.title || '').replace(/"/g, '""')}"`,
+      t.category || '',
+      t.wallet_source || 'Conta Principal',
+      Number(t.amount).toFixed(2),
+      t.status === 'paid' ? 'Efetivado' : 'Pendente'
+    ]);
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `extrato_${monthName.replace(' ', '_')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-4 max-w-6xl mx-auto pb-12">
@@ -654,9 +749,34 @@ export default function DashboardPage() {
       </div>
 
       {/* --- EXTRATO DETALHADO COMPLETO MODO TABELA --- */}
-      <div className="flex items-center gap-2 mt-10 mb-5">
-         <FileText className="w-6 h-6 text-slate-400" />
-         <h2 className="text-xl font-bold tracking-tight text-slate-900">Extrato Detalhado do Mês</h2>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-10 mb-5">
+         <div className="flex items-center gap-2">
+           <FileText className="w-6 h-6 text-slate-400" />
+           <h2 className="text-xl font-bold tracking-tight text-slate-900">Extrato Detalhado do Mês</h2>
+           <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{filteredTransactions.length} itens</span>
+         </div>
+         <div className="flex items-center gap-2 flex-wrap">
+           {/* Barra de busca */}
+           <div className="relative flex-1 min-w-[180px] md:min-w-[220px]">
+             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+             <input
+               value={searchQuery}
+               onChange={e => setSearchQuery(e.target.value)}
+               placeholder="Buscar por descrição, categoria..."
+               className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-300 transition-all"
+             />
+           </div>
+           {/* Filtro por tipo */}
+           <div className="flex bg-white border border-slate-200 rounded-xl overflow-hidden">
+             <button onClick={() => setFilterType('all')} className={`px-3 py-2.5 text-xs font-bold transition-colors ${filterType === 'all' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>Todos</button>
+             <button onClick={() => setFilterType('income')} className={`px-3 py-2.5 text-xs font-bold transition-colors border-l border-slate-200 ${filterType === 'income' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>Entradas</button>
+             <button onClick={() => setFilterType('expense')} className={`px-3 py-2.5 text-xs font-bold transition-colors border-l border-slate-200 ${filterType === 'expense' ? 'bg-red-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>Saídas</button>
+           </div>
+           {/* Exportar CSV */}
+           <button onClick={exportCSV} className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition-colors" title="Exportar CSV">
+             <Download className="w-3.5 h-3.5" /> CSV
+           </button>
+         </div>
       </div>
       
       <Card className="rounded-2xl border border-slate-200 shadow-sm overflow-hidden bg-white mb-10">
@@ -674,8 +794,8 @@ export default function DashboardPage() {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.recentTransactions.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-slate-400 font-medium">Nenhuma movimentação neste mês.</td></tr>}
-                    {data.recentTransactions.map((t:any) => (
+                    {filteredTransactions.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-slate-400 font-medium">{searchQuery || filterType !== 'all' ? 'Nenhum resultado para este filtro.' : 'Nenhuma movimentação neste mês.'}</td></tr>}
+                    {filteredTransactions.map((t:any) => (
                         <tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                             <td className="p-3 md:p-4 w-12 md:w-16">
                                 <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center ${t.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>

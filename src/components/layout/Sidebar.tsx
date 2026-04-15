@@ -2,13 +2,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { LayoutDashboard, Target, Settings, Upload, Wallet, FolderTree, Menu, X, LogOut } from 'lucide-react'
+import { LayoutDashboard, Target, Settings, Upload, Wallet, FolderTree, Menu, X, LogOut, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/metas', label: 'Metas', icon: Target },
+  { href: '/relatorios', label: 'Relatórios', icon: BarChart3 },
   { href: '/importar', label: 'Importar', icon: Upload },
   { href: '/categorias', label: 'Categorias', icon: FolderTree },
   { href: '/configuracoes', label: 'Configurações', icon: Settings },
